@@ -109,7 +109,8 @@
     <body class="font-sans text-slate-200 antialiased bg-slate-900 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] relative overflow-x-hidden">
         <div class="fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-900/95 to-slate-800 -z-10"></div>
         
-        <div class="min-h-screen pb-20 sm:pb-0" x-data="{ showGeneralMenu: false, showCreatePostModal: false }">
+        <div class="min-h-screen pb-20 sm:pb-0" x-data="{ showGeneralMenu: false, showCreatePostModal: false, showActionMenu: false, showNotaModal: false }">
+
             @include('layouts.navigation')
 
             <!-- Page Heading -->
@@ -232,6 +233,74 @@
                 </div>
             </div>
 
+            <!-- Modal Registrar Nota Fiscal -->
+            <div x-show="showNotaModal" 
+                 class="fixed inset-0 z-[100] flex items-center justify-center px-4"
+                 style="display: none;">
+                <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-md" @click="showNotaModal = false"></div>
+                
+                <div @click.stop class="relative w-full max-w-lg bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-white/10" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="scale-95 opacity-0" x-transition:enter-end="scale-100 opacity-100">
+                    <div class="flex justify-between items-center p-6 border-b border-white/10">
+                        <div>
+                            <p class="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] mb-1">Financeiro</p>
+                            <h3 class="font-black text-lg text-white uppercase tracking-tight">Registrar Nota</h3>
+                        </div>
+                        <button @click="showNotaModal = false" class="p-2 text-slate-500 hover:text-white transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+
+                    <form action="{{ route('nota-fiscals.store') }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
+                        @csrf
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Nº da Nota</label>
+                                <input type="text" name="numero_nota" required class="w-full bg-white/5 border-white/10 rounded-xl text-white text-sm focus:border-indigo-500">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Valor (R$)</label>
+                                <input type="number" step="0.01" name="valor" required class="w-full bg-white/5 border-white/10 rounded-xl text-white text-sm focus:border-indigo-500">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Descrição</label>
+                            <input type="text" name="descricao" required placeholder="Ex: Cimento, Tijolos..." class="w-full bg-white/5 border-white/10 rounded-xl text-white text-sm focus:border-indigo-500">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Data</label>
+                                <input type="date" name="data_recebimento" required value="{{ date('Y-m-d') }}" class="w-full bg-white/5 border-white/10 rounded-xl text-white text-sm">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Recebido por</label>
+                                <input type="text" name="quem_recebeu" required value="{{ auth()->user()->name }}" class="w-full bg-white/5 border-white/10 rounded-xl text-white text-sm focus:border-indigo-500">
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Arquivo ou Foto da Nota</label>
+                            <div class="relative group" x-data="{ hasFile: false }">
+                                <input type="file" name="arquivo" accept="image/*,application/pdf" capture="environment" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" @change="hasFile = $event.target.files.length > 0">
+                                <div class="p-4 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center gap-3 transition-all bg-white/[0.02]" :class="hasFile ? 'border-indigo-500/50 bg-indigo-500/5' : 'group-hover:border-indigo-500/30'">
+                                    <svg class="w-6 h-6 text-slate-500" :class="hasFile ? 'text-indigo-500' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    <p class="text-[10px] font-bold uppercase tracking-widest" :class="hasFile ? 'text-indigo-500' : 'text-slate-500'" x-text="hasFile ? 'Arquivo Selecionado ✓' : 'Tirar Foto ou PDF'"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl transition-all shadow-lg shadow-indigo-600/20 uppercase tracking-widest text-xs">
+                            Salvar Nota
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+
             <!-- General Menu Overlay (Slide up) -->
             <div x-show="showGeneralMenu" 
                  x-transition:enter="transition ease-out duration-300"
@@ -326,8 +395,36 @@
                     <span class="text-[10px] font-bold uppercase tracking-wider">Obras</span>
                 </a>
 
-                <!-- Central Action Button (Quick Post) -->
-                <div class="-mt-12 relative">
+                <!-- Central Action Button Menu -->
+                <div class="-mt-12 relative" x-data="{ }">
+                    <!-- Action Menu Options -->
+                    <div x-show="showActionMenu" 
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 -translate-y-4 scale-95"
+                         x-transition:enter-end="opacity-100 -translate-y-0 scale-100"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 -translate-y-0 scale-100"
+                         x-transition:leave-end="opacity-0 -translate-y-4 scale-95"
+                         class="absolute bottom-20 left-1/2 -translate-x-1/2 w-48 space-y-3 z-50"
+                         style="display: none;">
+                        
+                        <!-- Opção 1: Diário -->
+                        <button @click="showActionMenu = false; showCreatePostModal = true" class="w-full bg-slate-800/95 backdrop-blur-xl border border-white/10 p-4 rounded-2xl flex items-center gap-3 shadow-2xl active:scale-95 transition-all">
+                            <div class="w-8 h-8 bg-amber-500 rounded-xl flex items-center justify-center text-slate-900 shadow-lg shadow-amber-500/20">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            </div>
+                            <span class="text-[10px] font-black text-white uppercase tracking-widest text-left">Diário de Obra</span>
+                        </button>
+
+                        <!-- Opção 2: Nota Fiscal -->
+                        <button @click="showActionMenu = false; showNotaModal = true" class="w-full bg-slate-800/95 backdrop-blur-xl border border-white/10 p-4 rounded-2xl flex items-center gap-3 shadow-2xl active:scale-95 transition-all">
+                            <div class="w-8 h-8 bg-indigo-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            </div>
+                            <span class="text-[10px] font-black text-white uppercase tracking-widest text-left">Registrar Nota</span>
+                        </button>
+                    </div>
+
                     @if($diaEncerrado)
                         <div class="w-14 h-14 bg-slate-700 rounded-full flex items-center justify-center shadow-lg border-4 border-slate-900 text-slate-500 cursor-not-allowed" title="Diário encerrado">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -335,12 +432,14 @@
                             </svg>
                         </div>
                     @else
-                        <button @click="showCreatePostModal = true" class="w-14 h-14 bg-amber-500 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/30 border-4 border-slate-900 text-slate-900 active:scale-90 transition-transform">
+                        <button @click="showActionMenu = !showActionMenu" class="w-14 h-14 rounded-full flex items-center justify-center shadow-lg border-4 border-slate-900 active:scale-90 transition-all z-[60] relative"
+                                :class="showActionMenu ? 'bg-rose-500 text-white rotate-45' : 'bg-amber-500 text-slate-900'">
                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                             </svg>
                         </button>
                     @endif
+
                     <!-- Pending offline posts badge -->
                     <span id="pending-posts-badge" style="display:none;" class="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 rounded-full text-white text-[9px] font-black flex items-center justify-center shadow-lg z-10 leading-none"></span>
                 </div>

@@ -35,7 +35,8 @@ class NotaFiscalController extends Controller
             'data_recebimento' => 'required|date',
             'valor' => 'required|numeric|min:0',
             'quem_recebeu' => 'required|string|max:255',
-            'arquivo' => 'nullable|file|mimes:pdf|max:10240', // 10MB PDF
+            'arquivo' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:20480', // 20MB
+
             'observacao' => 'nullable|string',
         ]);
 

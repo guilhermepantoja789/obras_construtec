@@ -55,13 +55,63 @@
                     <p class="text-sm font-black uppercase tracking-wide">Diário Encerrado</p>
                     <p class="text-[11px] text-green-500/80">O relatório oficial deste dia foi emitido. Novas publicações não são permitidas.</p>
                 </div>
-                <a href="{{ route('diario-reports.pdf', $report) }}" target="_blank" download class="ml-auto flex-shrink-0 px-4 py-2 bg-green-500/20 hover:bg-green-500/30 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2">
+                <div x-data="{ 
+                    isGenerating: false,
+                    async downloadPdf() {
+                        if (this.isGenerating) return;
+                        this.isGenerating = true;
+                        
+                        try {
+                            const response = await fetch('{{ route('diario-reports.pdf', $report) }}');
+                            if (!response.ok) throw new Error('Falha ao gerar PDF');
+                            
+                            const blob = await response.blob();
+                            const url = window.URL.createObjectURL(blob);
+                            const fileName = 'diario-obra-{{ $obra->id }}-{{ $report->data_relatorio->format('Y-m-d') }}.pdf';
 
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    Baixar PDF
-                </a>
+                            if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], fileName, { type: 'application/pdf' })] })) {
+                                const file = new File([blob], fileName, { type: 'application/pdf' });
+                                await navigator.share({
+                                    files: [file],
+                                    title: 'Diário de Obra',
+                                    text: 'Confira o relatório diário da obra {{ $obra->nome }}'
+                                });
+                            } else {
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = fileName;
+                                document.body.appendChild(a);
+                                a.click();
+                                window.URL.revokeObjectURL(url);
+                                document.body.removeChild(a);
+                            }
+                        } catch (error) {
+                            alert('Erro ao gerar PDF. Tente novamente.');
+                        } finally {
+                            this.isGenerating = false;
+                        }
+                    }
+                }" class="ml-auto flex-shrink-0">
+                    <button @click="downloadPdf()" :disabled="isGenerating" class="px-4 py-2 bg-green-500/20 hover:bg-green-500/30 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 disabled:opacity-50">
+                        <template x-if="!isGenerating">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                <span>Baixar PDF</span>
+                            </div>
+                        </template>
+                        <template x-if="isGenerating">
+                            <div class="flex items-center gap-2">
+                                <svg class="animate-spin h-3 w-3 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Aguarde...</span>
+                            </div>
+                        </template>
+                    </button>
+                </div>
             </div>
         </div>
         @endif
