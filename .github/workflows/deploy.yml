@@ -54,7 +54,7 @@ jobs:
           php artisan migrate --force
           php artisan route:clear
           rm -rf public/storage
-          php artisan storage:link --relative
+          cd public && ln -s ../storage/app/public storage && cd ..
           mkdir -p ~/public_html/construtec/
           ln -snf ~/diario_obras_core/public/ ~/public_html/construtec/diario_obras/
         EOF
