@@ -59,7 +59,9 @@ jobs:
           rm -rf public/build/
           unzip -o deploy.zip
           rm deploy.zip
+          rm -f bootstrap/cache/*.php
           php artisan optimize:clear
+
           php artisan config:cache
           php artisan event:cache
           php artisan route:cache
