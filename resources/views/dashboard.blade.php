@@ -150,9 +150,10 @@
                             <p class="text-xs text-slate-300 line-clamp-2 leading-relaxed">{{ $post->texto }}</p>
                             @if($post->foto_path)
                                 <div class="mt-3 rounded-xl overflow-hidden aspect-video border border-white/5">
-                                    <img src="{{ Storage::url($post->foto_path) }}" class="w-full h-full object-cover grayscale-[0.3] hover:grayscale-0 transition-all duration-500">
+                                    <img src="{{ asset('storage/' . $post->foto_path) }}" class="w-full h-full object-cover grayscale-[0.3] hover:grayscale-0 transition-all duration-500">
                                 </div>
                             @endif
+
                         </div>
                     </div>
                 @empty
