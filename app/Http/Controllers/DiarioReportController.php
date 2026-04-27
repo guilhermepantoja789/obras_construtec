@@ -167,6 +167,16 @@ class DiarioReportController extends Controller
 
         $filename = 'diario-obra-' . $obra->id . '-' . $diarioReport->data_relatorio->format('Y-m-d') . '.pdf';
 
-        return $pdf->download($filename);
+        $pdfContent = $pdf->output();
+
+        return response($pdfContent, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Length' => strlen($pdfContent),
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
     }
 }
+
