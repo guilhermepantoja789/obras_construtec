@@ -110,6 +110,9 @@
             <td class="header-date">
                 <div class="label">Data do Relatório</div>
                 <div class="date">{{ $diarioReport->data_relatorio->format('d/m/Y') }}</div>
+                <div style="font-size: 7pt; font-weight: 900; text-transform: uppercase; margin-top: 4px; color: {{ $diarioReport->status_dia === 'trabalhado' ? '#059669' : ($diarioReport->status_dia === 'meio_expediente' ? '#2563eb' : '#e11d48') }}">
+                    {{ str_replace('_', ' ', $diarioReport->status_dia) }}
+                </div>
             </td>
         </tr>
     </table>

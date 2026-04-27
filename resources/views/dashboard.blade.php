@@ -63,6 +63,7 @@
         </div>
 
         <!-- Financial Overview Card -->
+        @if(Auth::user()->isChefe())
         <div class="bg-slate-800/40 backdrop-blur-xl border border-white/10 rounded-[2rem] overflow-hidden">
             <div class="p-6 border-b border-white/5">
                 <div class="flex items-center justify-between mb-4">
@@ -93,6 +94,7 @@
                 </div>
             </div>
         </div>
+        @endif
 
         <!-- Next Stages -->
         <div class="space-y-4">

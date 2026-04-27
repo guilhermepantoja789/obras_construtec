@@ -8,10 +8,12 @@
                 </h2>
             </div>
             
+            @if(Auth::user()->isChefe())
             <button @click="$dispatch('open-add-etapa-modal')" class="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all shadow-lg shadow-blue-600/20 text-[10px] font-black uppercase tracking-widest active:scale-95">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                Nova Etapa
+                {{ __('Nova Etapa') }}
             </button>
+            @endif
         </div>
     </x-slot>
 
@@ -72,9 +74,11 @@
                                         {{ $etapa->data_inicio_prevista ? $etapa->data_inicio_prevista->format('d/m/Y') : 'Sem data' }}
                                     </p>
                                 </div>
+                                @if(Auth::user()->isChefe())
                                 <button @click="openEditModal({{ json_encode($etapa) }})" class="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-slate-400 transition-colors active:scale-90">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                 </button>
+                                @endif
                             </div>
                             <div class="flex justify-between items-center text-[10px] font-black uppercase tracking-tighter mb-1.5 mt-4">
                                 <span class="text-slate-500">Andamento</span>

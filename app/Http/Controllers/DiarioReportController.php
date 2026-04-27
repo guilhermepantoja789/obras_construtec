@@ -47,6 +47,7 @@ class DiarioReportController extends Controller
             'observacoes' => 'nullable|string',
             'motivo_paralisacao' => 'nullable|string',
             'dia_improdutivo' => 'nullable|boolean',
+            'status_dia' => 'required|string|in:trabalhado,meio_expediente,nao_trabalhado',
         ]);
 
         $obraId = session('active_obra_id');
@@ -117,6 +118,7 @@ class DiarioReportController extends Controller
             'ocorrencias'        => 'nullable|string',
             'observacoes'        => 'nullable|string',
             'dia_improdutivo'    => 'nullable|boolean',
+            'status_dia'         => 'required|string|in:trabalhado,meio_expediente,nao_trabalhado',
         ]);
 
         $diarioReport->update(array_merge($validated, [

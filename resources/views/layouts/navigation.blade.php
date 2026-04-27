@@ -64,7 +64,7 @@
                 </div>
 
                 <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                <div class="hidden space-x-4 lg:space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-slate-400 hover:text-white border-transparent hover:border-amber-500 transition-all">
                         {{ __('Dashboard') }}
                     </x-nav-link>
@@ -73,10 +73,44 @@
                         {{ __('Obras') }}
                     </x-nav-link>
 
-                    <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')" class="text-slate-400 hover:text-white border-transparent hover:border-amber-500 transition-all">
-                        {{ __('Equipe') }}
+                    <x-nav-link :href="route('etapa-obras.index')" :active="request()->routeIs('etapa-obras.*')" class="text-slate-400 hover:text-white border-transparent hover:border-amber-500 transition-all">
+                        {{ __('Cronograma') }}
                     </x-nav-link>
+
+                    @if(Auth::user()->isChefe())
+                        <x-nav-link :href="route('propostas.index')" :active="request()->routeIs('propostas.*')" class="text-slate-400 hover:text-white border-transparent hover:border-amber-500 transition-all">
+                            {{ __('Propostas') }}
+                        </x-nav-link>
+
+                        <x-nav-link :href="route('financeiro.index')" :active="request()->routeIs('financeiro.*')" class="text-slate-400 hover:text-white border-transparent hover:border-amber-500 transition-all">
+                            {{ __('Financeiro') }}
+                        </x-nav-link>
+                    @endif
+
+                    @if(!Auth::user()->isClient())
+                        <x-nav-link :href="route('nota-fiscals.index')" :active="request()->routeIs('nota-fiscals.*')" class="text-slate-400 hover:text-white border-transparent hover:border-amber-500 transition-all">
+                            {{ __('Notas') }}
+                        </x-nav-link>
+                    @endif
+
+                    @if(Auth::user()->isChefe())
+                        <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')" class="text-slate-400 hover:text-white border-transparent hover:border-amber-500 transition-all">
+                            {{ __('Equipe') }}
+                        </x-nav-link>
+                    @endif
                 </div>
+            </div>
+
+            <!-- Geral Menu Trigger (Desktop) -->
+            <div class="hidden sm:flex items-center ms-4">
+                <button @click="showGeneralMenu = !showGeneralMenu" 
+                        class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors border border-transparent hover:border-white/10 flex items-center gap-2 group"
+                        :class="showGeneralMenu ? 'text-amber-500 bg-white/5 border-white/10' : ''">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+                    </svg>
+                    <span class="text-[10px] font-bold uppercase tracking-widest hidden lg:block">Menu</span>
+                </button>
             </div>
 
             <!-- Settings Dropdown -->

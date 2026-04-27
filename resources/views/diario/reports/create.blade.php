@@ -28,15 +28,35 @@
             
             <!-- Sessão 1: Auditoria de Tempo (07:00 as 20:00) -->
             <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl">
-                <div class="flex justify-between items-center mb-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <h3 class="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
                         <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
                         Auditoria de Tempo (Hora a Hora)
                     </h3>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="dia_improdutivo" value="1" class="rounded border-white/10 bg-slate-900 text-amber-500 focus:ring-amber-500">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dia Improdutivo</span>
-                    </label>
+                    
+                    <div class="flex flex-wrap items-center gap-4 bg-slate-900/50 p-1.5 rounded-2xl border border-white/5">
+                        <div class="flex items-center gap-1">
+                            <div>
+                                <input type="radio" name="status_dia" id="status_trabalhado" value="trabalhado" checked class="hidden peer">
+                                <label for="status_trabalhado" class="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest cursor-pointer transition-all peer-checked:bg-amber-500 peer-checked:text-slate-900 text-slate-500 hover:text-white block">Trabalhado</label>
+                            </div>
+                            
+                            <div>
+                                <input type="radio" name="status_dia" id="status_meio" value="meio_expediente" class="hidden peer">
+                                <label for="status_meio" class="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest cursor-pointer transition-all peer-checked:bg-blue-500 peer-checked:text-white text-slate-500 hover:text-white block">Meio Exp.</label>
+                            </div>
+                            
+                            <div>
+                                <input type="radio" name="status_dia" id="status_nao" value="nao_trabalhado" class="hidden peer">
+                                <label for="status_nao" class="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest cursor-pointer transition-all peer-checked:bg-rose-500 peer-checked:text-white text-slate-500 hover:text-white block">Não Trab.</label>
+                            </div>
+                        </div>
+                        <div class="w-px h-4 bg-white/10 mx-1"></div>
+                        <label class="flex items-center gap-2 cursor-pointer group">
+                            <input type="checkbox" name="dia_improdutivo" value="1" class="rounded border-white/10 bg-slate-900 text-amber-500 focus:ring-amber-500">
+                            <span class="text-[9px] font-bold text-slate-400 group-hover:text-amber-500 transition-colors uppercase tracking-widest">Improdutivo</span>
+                        </label>
+                    </div>
                 </div>
                 
                 <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">

@@ -101,8 +101,19 @@
                             <p class="text-[10px] font-bold text-amber-500 uppercase tracking-[0.3em]">Registro de Atividades Diárias</p>
                         </td>
                         <td class="p-6 border-l-2 border-slate-900 text-right">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Data do Relatório</p>
-                            <p class="text-3xl font-black text-slate-900">{{ $diarioReport->data_relatorio->format('d/m/Y') }}</p>
+                            <div class="flex flex-col items-end gap-2">
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Data do Relatório</p>
+                                    <p class="text-3xl font-black text-slate-900 leading-none">{{ $diarioReport->data_relatorio->format('d/m/Y') }}</p>
+                                </div>
+                                @if($diarioReport->status_dia === 'meio_expediente')
+                                    <span class="px-3 py-1 bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full">Meio Expediente</span>
+                                @elseif($diarioReport->status_dia === 'nao_trabalhado')
+                                    <span class="px-3 py-1 bg-rose-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full">Dia Não Trabalhado</span>
+                                @else
+                                    <span class="px-3 py-1 bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full">Dia Trabalhado</span>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                 </table>

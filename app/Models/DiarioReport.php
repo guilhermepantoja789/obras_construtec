@@ -21,6 +21,7 @@ class DiarioReport extends Model
         'observacoes',
         'motivo_paralisacao',
         'dia_improdutivo',
+        'status_dia',
         'editado_em',
         'editado_por',
     ];

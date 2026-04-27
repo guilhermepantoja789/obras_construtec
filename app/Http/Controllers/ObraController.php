@@ -9,7 +9,15 @@ class ObraController extends Controller
 {
     public function index()
     {
-        $obras = Obra::withCount('users')->latest()->get();
+        $query = Obra::withCount('users')->latest();
+        
+        if (!auth()->user()->isChefe()) {
+            $query->whereHas('users', function($q) {
+                $q->where('users.id', auth()->id());
+            });
+        }
+
+        $obras = $query->get();
         $chefesCount = \App\Models\User::where('role', 'chefe')->count();
         return view('obras.index', compact('obras', 'chefesCount'));
     }
@@ -47,6 +55,10 @@ class ObraController extends Controller
 
     public function show(Obra $obra)
     {
+        if (!auth()->user()->isChefe() && !auth()->user()->obras->contains($obra->id)) {
+            abort(403);
+        }
+
         $obra->load(['users', 'diarioPosts', 'etapas', 'propostas']);
         $chefes = \App\Models\User::where('role', 'chefe')->get();
         

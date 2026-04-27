@@ -115,7 +115,7 @@
 
             <!-- Page Heading -->
             @isset($header)
-                <header class="bg-slate-800/50 backdrop-blur-md border-b border-white/10 shadow-lg sticky top-0 z-40">
+                <header class="bg-slate-800/50 backdrop-blur-md border-b border-white/10 shadow-lg sticky top-0 sm:top-16 z-40">
                     <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>
@@ -309,13 +309,14 @@
                  x-transition:leave="transition ease-in duration-200"
                  x-transition:leave-start="translate-y-0 opacity-100"
                  x-transition:leave-end="translate-y-full opacity-0"
-                 class="fixed inset-0 z-[60] flex items-end justify-center px-4 pb-24"
+                 class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center px-4 pb-24 sm:pb-0"
                  style="display: none;">
                 <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showGeneralMenu = false"></div>
                 
                 <div class="relative w-full max-w-sm bg-slate-800/90 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl p-6 overflow-hidden">
                     <div class="grid grid-cols-3 gap-6">
                         <!-- Propostas -->
+                        @if(Auth::user()->isChefe())
                         <a href="{{ route('propostas.index') }}" class="flex flex-col items-center gap-2 group">
                             <div class="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500 border border-amber-500/20 group-active:scale-90 transition-transform">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -324,6 +325,7 @@
                             </div>
                             <span class="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Propostas</span>
                         </a>
+                        @endif
 
                         <!-- Cronograma -->
                         <a href="{{ route('etapa-obras.index') }}" class="flex flex-col items-center gap-2 group">
@@ -336,6 +338,7 @@
                         </a>
 
                         <!-- Financeiro -->
+                        @if(Auth::user()->isChefe())
                         <a href="{{ route('financeiro.index') }}" class="flex flex-col items-center gap-2 group">
                             <div class="w-12 h-12 bg-green-500/10 rounded-2xl flex items-center justify-center text-green-500 border border-green-500/20 group-active:scale-90 transition-transform">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -344,9 +347,11 @@
                             </div>
                             <span class="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Financeiro</span>
                         </a>
+                        @endif
 
                         <!-- Contrato -->
                         @php $activeObraId = session('active_obra_id'); @endphp
+                        @if(Auth::user()->isChefe())
                         <a href="{{ $activeObraId ? route('contrato.edit', $activeObraId) : '#' }}" class="flex flex-col items-center gap-2 group {{ !$activeObraId ? 'opacity-50' : '' }}">
                             <div class="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500 border border-amber-500/20 group-active:scale-90 transition-transform">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -355,8 +360,10 @@
                             </div>
                             <span class="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Contrato</span>
                         </a>
+                        @endif
 
                         <!-- Equipe -->
+                        @if(Auth::user()->isChefe())
                         <a href="{{ route('users.index') }}" class="flex flex-col items-center gap-2 group">
                             <div class="w-12 h-12 bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-500 border border-rose-500/20 group-active:scale-90 transition-transform">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -365,8 +372,10 @@
                             </div>
                             <span class="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Equipe</span>
                         </a>
+                        @endif
 
                         <!-- Notas Fiscais -->
+                        @if(!Auth::user()->isClient())
                         <a href="{{ route('nota-fiscals.index') }}" class="flex flex-col items-center gap-2 group">
                             <div class="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-500 border border-indigo-500/20 group-active:scale-90 transition-transform">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -375,6 +384,7 @@
                             </div>
                             <span class="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Notas Fiscais</span>
                         </a>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -396,6 +406,7 @@
                 </a>
 
                 <!-- Central Action Button Menu -->
+                @if(!Auth::user()->isClient())
                 <div class="-mt-12 relative" x-data="{ }">
                     <!-- Action Menu Options -->
                     <div x-show="showActionMenu" 
@@ -417,12 +428,14 @@
                         </button>
 
                         <!-- Opção 2: Nota Fiscal -->
+                        @if(!Auth::user()->isClient())
                         <button @click="showActionMenu = false; showNotaModal = true" class="w-full bg-slate-800/95 backdrop-blur-xl border border-white/10 p-4 rounded-2xl flex items-center gap-3 shadow-2xl active:scale-95 transition-all">
                             <div class="w-8 h-8 bg-indigo-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                             </div>
                             <span class="text-[10px] font-black text-white uppercase tracking-widest text-left">Registrar Nota</span>
                         </button>
+                        @endif
                     </div>
 
                     @if($diaEncerrado)
@@ -443,6 +456,7 @@
                     <!-- Pending offline posts badge -->
                     <span id="pending-posts-badge" style="display:none;" class="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 rounded-full text-white text-[9px] font-black flex items-center justify-center shadow-lg z-10 leading-none"></span>
                 </div>
+                @endif
 
                 <a href="{{ route('feed.index') }}" class="flex flex-col items-center gap-1 {{ request()->routeIs('feed.*') ? 'text-amber-500' : 'text-slate-400' }}">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

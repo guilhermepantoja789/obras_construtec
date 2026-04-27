@@ -30,6 +30,7 @@
                         </svg>
                     </a>
                 @else
+                    @if(!Auth::user()->isClient())
                     <a href="{{ route('diario-reports.create') }}" class="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-500 transition-all hover:bg-amber-500/20 group">
                         <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
                         <span class="text-[10px] font-black uppercase tracking-widest">Finalizar Dia</span>
@@ -37,6 +38,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                         </svg>
                     </a>
+                    @endif
                 @endif
             </div>
         </div>
