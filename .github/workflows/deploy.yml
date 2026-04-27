@@ -26,7 +26,8 @@ jobs:
         node-version: '20'
 
     - name: Instalar dependências do Composer
-      run: composer install --no-dev --prefer-dist --optimize-autoloader
+      run: composer install --no-dev --prefer-dist --optimize-autoloader --ignore-platform-reqs
+
 
     - name: Instalar dependências do NPM e gerar Build
       run: |
