@@ -16,6 +16,8 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('obras', \App\Http\Controllers\ObraController::class);
     Route::resource('propostas', \App\Http\Controllers\PropostaController::class);
+    Route::post('propostas/import', [\App\Http\Controllers\PropostaController::class, 'import'])->name('propostas.import');
+
     Route::resource('users', \App\Http\Controllers\UserController::class);
     Route::get('/feed', [\App\Http\Controllers\FeedController::class, 'index'])->name('feed.index');
     Route::resource('diario-posts', \App\Http\Controllers\DiarioPostController::class);
