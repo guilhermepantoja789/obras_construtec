@@ -42,8 +42,14 @@ class DiarioPostController extends Controller
         // Scale down to max 1200px width/height while maintaining aspect ratio
         $image->scaleDown(width: 1200, height: 1200);
 
-        // Save as WebP with 80% quality
-        Storage::disk('public')->put($path, (string) $image->toWebp(80));
+        // Save as WebP with 75% quality for better performance
+        try {
+            $encoded = $image->toWebp(75);
+            Storage::disk('public')->put($path, (string) $encoded);
+        } catch (\Exception $e) {
+            \Log::error('Erro ao salvar imagem no storage: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao salvar a imagem. Por favor, tente novamente.');
+        }
 
         DiarioPost::create([
             'obra_id' => $obraId,

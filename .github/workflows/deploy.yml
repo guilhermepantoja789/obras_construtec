@@ -53,7 +53,8 @@ jobs:
           php artisan view:cache
           php artisan migrate --force
           php artisan route:clear
-          php artisan storage:link
+          rm -rf public/storage
+          php artisan storage:link --relative
           mkdir -p ~/public_html/construtec/
           ln -snf ~/diario_obras_core/public/ ~/public_html/construtec/diario_obras/
         EOF

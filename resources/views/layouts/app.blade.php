@@ -376,7 +376,7 @@
                     <div class="bg-slate-800/95 backdrop-blur-2xl border border-amber-500/30 rounded-3xl p-5 shadow-2xl flex items-center justify-between gap-4">
                         <div class="flex items-center gap-4">
                             <div class="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center shadow-lg">
-                                <img src="/icon.png" class="w-8 h-8 rounded-lg" alt="App Icon">
+                                <img src="{{ asset('icon.png') }}" class="w-8 h-8 rounded-lg" alt="App Icon">
                             </div>
                             <div>
                                 <h4 class="text-white font-black text-sm uppercase tracking-tight">Instalar Diário</h4>
@@ -409,7 +409,7 @@
                         
                         <div class="flex flex-col items-center text-center space-y-6">
                             <div class="w-20 h-20 bg-amber-500 rounded-[32px] flex items-center justify-center shadow-2xl mb-2">
-                                <img src="/icon.png" class="w-14 h-14 rounded-2xl" alt="App Icon">
+                                <img src="{{ asset('icon.png') }}" class="w-14 h-14 rounded-2xl" alt="App Icon">
                             </div>
                             
                             <div>
