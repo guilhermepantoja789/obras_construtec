@@ -132,7 +132,8 @@
             <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-md" @click="showEditEtapaModal = false"></div>
             <div class="relative w-full max-w-lg bg-slate-900 border border-white/10 rounded-3xl shadow-2xl p-6" x-transition>
                 <h3 class="text-white font-black uppercase tracking-widest text-sm mb-6">Atualizar Andamento</h3>
-                <form :action="'/etapa-obras/' + selectedEtapa?.id" method="POST" class="space-y-4">
+                <form :action="'{{ url('etapa-obras') }}/' + selectedEtapa?.id" method="POST" class="space-y-4">
+
                     @csrf @method('PUT')
                     <input type="hidden" name="valor" :value="selectedEtapa?.valor || 0">
                     <div>

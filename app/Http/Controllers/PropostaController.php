@@ -43,8 +43,9 @@ class PropostaController extends Controller
             'items' => 'required|array|min:1',
             'items.*.descricao' => 'required|string|max:255',
             'items.*.unidade' => 'nullable|string|max:20',
-            'items.*.quantidade' => 'required|numeric|min:0',
-            'items.*.valor_unitario' => 'required|numeric|min:0',
+            'items.*.quantidade' => 'required|numeric',
+            'items.*.valor_unitario' => 'required|numeric',
+
             'items.*.is_etapa' => 'nullable',
             'items.*.ordem' => 'nullable|string',
 
@@ -109,8 +110,9 @@ class PropostaController extends Controller
             'items' => 'required|array|min:1',
             'items.*.descricao' => 'required|string|max:255',
             'items.*.unidade' => 'nullable|string|max:20',
-            'items.*.quantidade' => 'required|numeric|min:0',
-            'items.*.valor_unitario' => 'required|numeric|min:0',
+            'items.*.quantidade' => 'required|numeric',
+            'items.*.valor_unitario' => 'required|numeric',
+
             'items.*.is_etapa' => 'nullable',
             'items.*.ordem' => 'nullable|string',
 
