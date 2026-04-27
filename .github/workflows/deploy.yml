@@ -13,15 +13,27 @@ jobs:
     - name: Checkout do código
       uses: actions/checkout@v4
 
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        extensions: mbstring, xml, ctype, iconv, intl, zip
+        coverage: none
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
 
+    - name: Instalar dependências do Composer
+      run: composer install --no-dev --prefer-dist --optimize-autoloader
+
     - name: Instalar dependências do NPM e gerar Build
       run: |
         npm install
         npm run build
+
+
 
     # 1. Compacta o código (ignora as pastas desnecessárias)
     - name: Criar arquivo ZIP
