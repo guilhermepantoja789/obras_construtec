@@ -150,14 +150,21 @@ class DiarioReportController extends Controller
             ->map(function ($post) {
                 $path = storage_path('app/public/' . $post->foto_path);
                 if (file_exists($path)) {
-                    $mime = mime_content_type($path);
-                    $data = base64_encode(file_get_contents($path));
-                    $post->foto_base64 = "data:{$mime};base64,{$data}";
+                    try {
+                        // Redimensionar para 800px de largura mantendo proporção para ser mais rápido
+                        $img = \Intervention\Image\Laravel\Facades\Image::read($path);
+                        $img->scale(width: 800);
+                        $data = (string) $img->encodeByExtension('jpg', quality: 70);
+                        $post->foto_base64 = "data:image/jpeg;base64," . base64_encode($data);
+                    } catch (\Exception $e) {
+                        $post->foto_base64 = null;
+                    }
                 } else {
                     $post->foto_base64 = null;
                 }
                 return $post;
             });
+
 
         $pdf = Pdf::loadView('diario.reports.pdf', compact(
             'diarioReport', 'obra', 'diasCorridos', 'diasImprodutivos', 'diasRestantes', 'postsComFoto'

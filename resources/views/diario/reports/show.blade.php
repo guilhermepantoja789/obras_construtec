@@ -19,13 +19,66 @@
                         Editar
                     </a>
                 @endif
-                <a href="{{ route('diario-reports.pdf', $diarioReport) }}" target="_blank" download class="px-6 py-3 bg-amber-500 text-slate-900 rounded-full text-[10px] font-black uppercase tracking-widest transition-all hover:bg-amber-400 active:scale-95 shadow-lg shadow-amber-500/20 flex items-center gap-2">
+                <div x-data="{ 
+                    isGenerating: false,
+                    async downloadPdf() {
+                        if (this.isGenerating) return;
+                        this.isGenerating = true;
+                        
+                        try {
+                            const response = await fetch('{{ route('diario-reports.pdf', $diarioReport) }}');
+                            if (!response.ok) throw new Error('Falha ao gerar PDF');
+                            
+                            const blob = await response.blob();
+                            const url = window.URL.createObjectURL(blob);
+                            const fileName = 'diario-obra-{{ $obra->id }}-{{ $diarioReport->data_relatorio->format('Y-m-d') }}.pdf';
 
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    Salvar Relatório PDF
-                </a>
+                            // Tentar usar Web Share API no Mobile (especialmente iOS)
+                            if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], fileName, { type: 'application/pdf' })] })) {
+                                const file = new File([blob], fileName, { type: 'application/pdf' });
+                                await navigator.share({
+                                    files: [file],
+                                    title: 'Diário de Obra',
+                                    text: 'Confira o relatório diário da obra {{ $obra->nome }}'
+                                });
+                            } else {
+                                // Fallback para download padrão
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = fileName;
+                                document.body.appendChild(a);
+                                a.click();
+                                window.URL.revokeObjectURL(url);
+                                document.body.removeChild(a);
+                            }
+                        } catch (error) {
+                            alert('Erro ao gerar PDF. Tente novamente.');
+                            console.error(error);
+                        } finally {
+                            this.isGenerating = false;
+                        }
+                    }
+                }">
+                    <button @click="downloadPdf()" :disabled="isGenerating" class="px-6 py-3 bg-amber-500 text-slate-900 rounded-full text-[10px] font-black uppercase tracking-widest transition-all hover:bg-amber-400 active:scale-95 shadow-lg shadow-amber-500/20 flex items-center gap-2 disabled:opacity-50 disabled:cursor-wait">
+                        <template x-if="!isGenerating">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                <span>Salvar Relatório PDF</span>
+                            </div>
+                        </template>
+                        <template x-if="isGenerating">
+                            <div class="flex items-center gap-2">
+                                <svg class="animate-spin h-4 w-4 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Gerando PDF...</span>
+                            </div>
+                        </template>
+                    </button>
+                </div>
                 <a href="{{ route('feed.index') }}" class="text-slate-500 hover:text-white">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
