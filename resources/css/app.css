@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+html, body {
+    /* Remove click delay and double-tap zoom */
+    touch-action: manipulation;
+    /* Remove gray highlight on tap (iOS) */
+    -webkit-tap-highlight-color: transparent;
+    /* Prevent accidental text selection on UI elements */
+    user-select: none;
+    /* Smooth scrolling */
+    scroll-behavior: smooth;
+}
+
+/* Allow text selection in inputs, textareas and specific content */
+input, textarea, [contenteditable="true"], .selectable {
+    user-select: text;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
 }
