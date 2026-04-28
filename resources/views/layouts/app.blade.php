@@ -194,7 +194,7 @@
                             </div>
 
                             <div class="relative group" x-show="!photoPreview">
-                                <input type="file" id="post-foto" name="foto" accept="image/*" capture="environment" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                <input type="file" id="post-foto" name="foto" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                        @change="
                                             photoFile = $event.target.files[0];
                                             photoName = photoFile.name;
@@ -282,7 +282,7 @@
                         <div class="space-y-2">
                             <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Arquivo ou Foto da Nota</label>
                             <div class="relative group" x-data="{ hasFile: false }">
-                                <input type="file" name="arquivo" accept="image/*,application/pdf" capture="environment" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" @change="hasFile = $event.target.files.length > 0">
+                                <input type="file" name="arquivo" accept="image/*,application/pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" @change="hasFile = $event.target.files.length > 0">
                                 <div class="p-4 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center gap-3 transition-all bg-white/[0.02]" :class="hasFile ? 'border-indigo-500/50 bg-indigo-500/5' : 'group-hover:border-indigo-500/30'">
                                     <svg class="w-6 h-6 text-slate-500" :class="hasFile ? 'text-indigo-500' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
