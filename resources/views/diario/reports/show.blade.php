@@ -240,6 +240,14 @@
                 </div>
             </div>
 
+            <!-- ANOTAÇÕES GERAIS -->
+            <div class="p-6 border-b-2 border-slate-200">
+                <h3 class="text-[10px] font-black text-slate-500 uppercase mb-2">Anotações Gerais</h3>
+                <div class="text-xs text-slate-700 whitespace-pre-line min-h-[60px]">
+                    {{ $diarioReport->observacoes ?: '---' }}
+                </div>
+            </div>
+
             <!-- FOTOS -->
             <div class="p-6 border-b-2 border-slate-900 bg-slate-50/30">
                 <h3 class="text-[10px] font-black text-slate-900 uppercase mb-6">Registro Fotográfico</h3>

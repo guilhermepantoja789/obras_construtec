@@ -235,6 +235,14 @@
             </td>
         </tr>
     </table>
+    
+    <!-- ANOTAÇÕES GERAIS -->
+    <div style="border-top: 1px solid #e2e8f0; padding: 12px 20px;">
+        <div class="section-label">Anotações Gerais</div>
+        <div class="relato-text" style="min-height: 100px; padding-top: 5px;">
+            {!! nl2br(e($diarioReport->observacoes)) ?: '<span style="color: #94a3b8; font-style: italic;">Nenhuma anotação adicional registrada.</span>' !!}
+        </div>
+    </div>
 
     <!-- FOTOS (se houver) -->
     @if($postsComFoto->where('foto_base64', '!=', null)->count() > 0)
