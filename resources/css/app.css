@@ -36,3 +36,21 @@ input, textarea, [contenteditable="true"], .selectable {
 [x-cloak] {
     display: none !important;
 }
+
+/* Safe Area Utilities for iOS */
+.safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Margin version if needed */
+.mt-safe {
+    margin-top: env(safe-area-inset-top, 0px);
+}
+
+.mb-safe {
+    margin-bottom: env(safe-area-inset-bottom, 0px);
+}

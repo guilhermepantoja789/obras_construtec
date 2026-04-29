@@ -20,7 +20,7 @@
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
         <meta name="apple-mobile-web-app-title" content="Construtec">
-        <meta name="theme-color" content="#f59e0b">
+        <meta name="theme-color" content="#0f172a">
         <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
         <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
         <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
@@ -109,7 +109,7 @@
     <body class="font-sans text-slate-200 antialiased bg-slate-900 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] relative overflow-x-hidden">
         <div class="fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-900/95 to-slate-800 -z-10"></div>
         
-        <div class="min-h-screen pb-20 sm:pb-0" x-data="{ showGeneralMenu: false, showCreatePostModal: false, showActionMenu: false, showNotaModal: false }">
+        <div class="min-h-screen pb-20 sm:pb-0 safe-area-bottom" x-data="{ showGeneralMenu: false, showCreatePostModal: false, showActionMenu: false, showNotaModal: false }">
 
             @include('layouts.navigation')
 
@@ -309,7 +309,7 @@
                  x-transition:leave="transition ease-in duration-200"
                  x-transition:leave-start="translate-y-0 opacity-100"
                  x-transition:leave-end="translate-y-full opacity-0"
-                 class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center px-4 pb-24 sm:pb-0"
+                 class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center px-4 pb-24 sm:pb-0 safe-area-bottom"
                  style="display: none;">
                 <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showGeneralMenu = false"></div>
                 
