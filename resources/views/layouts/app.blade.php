@@ -316,6 +316,7 @@
                 <div class="relative w-full max-w-sm bg-slate-800/90 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl p-6 overflow-hidden">
                     <div class="grid grid-cols-3 gap-6">
                         <!-- Propostas -->
+                        @php $activeObraId = session('active_obra_id'); @endphp
                         @if(Auth::user()->isChefe())
                         <a href="{{ route('propostas.index') }}" class="flex flex-col items-center gap-2 group">
                             <div class="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500 border border-amber-500/20 group-active:scale-90 transition-transform">
@@ -326,6 +327,16 @@
                             <span class="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Propostas</span>
                         </a>
                         @endif
+
+                        <!-- Diários (Histórico) -->
+                        <a href="{{ $activeObraId ? route('diario-reports.index') : '#' }}" class="flex flex-col items-center gap-2 group {{ !$activeObraId ? 'opacity-50' : '' }}">
+                            <div class="w-12 h-12 bg-cyan-500/10 rounded-2xl flex items-center justify-center text-cyan-500 border border-cyan-500/20 group-active:scale-90 transition-transform">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                </svg>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Diários</span>
+                        </a>
 
                         <!-- Cronograma -->
                         <a href="{{ route('etapa-obras.index') }}" class="flex flex-col items-center gap-2 group">
@@ -350,7 +361,6 @@
                         @endif
 
                         <!-- Contrato -->
-                        @php $activeObraId = session('active_obra_id'); @endphp
                         @if(Auth::user()->isChefe())
                         <a href="{{ $activeObraId ? route('contrato.edit', $activeObraId) : '#' }}" class="flex flex-col items-center gap-2 group {{ !$activeObraId ? 'opacity-50' : '' }}">
                             <div class="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500 border border-amber-500/20 group-active:scale-90 transition-transform">

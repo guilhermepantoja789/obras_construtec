@@ -149,15 +149,61 @@
                     </div>
                 </div>
 
-                <!-- Feed (Placeholder para o próximo passo) -->
-                <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center shadow-xl">
-                    <div class="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10">
-                        <svg class="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                        </svg>
+                <!-- Histórico de Diários -->
+                <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-6">
+                            <div class="p-2 bg-blue-500/10 rounded-lg">
+                                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-sm font-bold text-white uppercase tracking-widest">Histórico de Diários</h3>
+                        </div>
+
+                        <div class="space-y-3">
+                            @forelse($obra->diarioReports as $report)
+                                <a href="{{ route('diario-reports.show', $report) }}" class="flex items-center justify-between p-4 bg-slate-900/50 rounded-2xl border border-white/5 hover:border-blue-500/50 hover:bg-blue-500/5 transition-all group">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-xs font-black text-slate-400 group-hover:text-blue-500 transition-colors">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs font-bold text-white">{{ $report->data_relatorio->format('d/m/Y') }}</p>
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded
+                                                    @if($report->status_dia == 'trabalhado') bg-emerald-500/10 text-emerald-500
+                                                    @elseif($report->status_dia == 'meio_expediente') bg-blue-500/10 text-blue-500
+                                                    @else bg-rose-500/10 text-rose-500 @endif">
+                                                    {{ str_replace('_', ' ', $report->status_dia) }}
+                                                </span>
+                                                @if($report->dia_improdutivo)
+                                                    <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500">
+                                                        Improdutivo
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="p-2 text-slate-600 group-hover:text-blue-500 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                    </div>
+                                </a>
+                            @empty
+                                <div class="p-8 text-center border border-dashed border-white/5 rounded-2xl">
+                                    <div class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3 border border-white/10">
+                                        <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                    </div>
+                                    <p class="text-[10px] text-slate-600 font-black uppercase tracking-widest mb-1">Diário de Obra vazio</p>
+                                    <p class="text-[10px] text-slate-600">Nenhum relatório diário foi emitido ainda.</p>
+                                </div>
+                            @endforelse
+                        </div>
                     </div>
-                    <h4 class="text-white font-bold mb-1">Diário de Obra vazio</h4>
-                    <p class="text-xs text-slate-500">Nenhuma postagem ou foto foi registrada ainda.</p>
                 </div>
             </div>
 

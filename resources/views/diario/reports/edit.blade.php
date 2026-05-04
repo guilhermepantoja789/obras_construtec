@@ -25,14 +25,78 @@
     }">
 
         <!-- Audit Warning Banner -->
-        <div class="mb-8 flex items-center gap-4 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400">
+        <div class="mb-8 flex items-center gap-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-amber-500">
             <svg class="w-8 h-8 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
             <div>
-                <p class="text-sm font-black uppercase">Atenção: Relatório já emitido</p>
-                <p class="text-[11px] text-rose-400/70 mt-0.5">Toda edição ficará registrada com seu nome e horário no documento oficial. As fotos do feed não podem ser alteradas.</p>
+                <p class="text-sm font-black uppercase">Modo de Edição Avançada</p>
+                <p class="text-[11px] text-amber-500/70 mt-0.5">Como responsável, você tem acesso para alterar os dados e adicionar/remover fotos retroativamente. Toda edição ficará registrada.</p>
             </div>
+        </div>
+
+        <!-- Seção: Gerenciamento de Fotos -->
+        <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl mb-8">
+            <h3 class="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2 mb-6">
+                <span class="w-2 h-2 bg-pink-500 rounded-full"></span>
+                Gerenciamento de Fotos
+            </h3>
+
+            <!-- Grid de Fotos Existentes -->
+            @if($postsComFoto->count() > 0)
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-6">
+                    @foreach($postsComFoto as $post)
+                        <div class="relative group aspect-square rounded-2xl overflow-hidden bg-slate-900 border border-white/10">
+                            <img src="{{ asset('storage/' . $post->foto_path) }}" class="w-full h-full object-cover transition-transform group-hover:scale-110">
+                            
+                            <form action="{{ route('diario-posts.destroy', $post) }}" method="POST" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onsubmit="return confirm('Tem certeza que deseja excluir esta foto retroativamente?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="w-8 h-8 bg-rose-500 hover:bg-rose-600 text-white rounded-full flex items-center justify-center shadow-lg">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </form>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <p class="text-xs text-slate-500 uppercase tracking-widest font-bold mb-6">Nenhuma foto registrada neste dia.</p>
+            @endif
+
+            <!-- Adicionar Nova Foto -->
+            <form action="{{ route('diario-reports.add-photo', $diarioReport) }}" method="POST" enctype="multipart/form-data" class="border-t border-white/10 pt-6" x-data="{ photoName: null, photoPreview: null, photoFile: null, submitting: false }" @submit="submitting = true">
+                @csrf
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Adicionar Foto Retroativa</p>
+                
+                <div x-show="photoPreview" class="relative w-full max-w-sm aspect-video rounded-2xl overflow-hidden border border-white/10 mb-4" style="display: none;">
+                    <img :src="photoPreview" class="w-full h-full object-cover">
+                    <button type="button" @click="photoPreview = null; photoName = null; photoFile = null; $refs.fileInput.value = ''" class="absolute top-2 right-2 p-1.5 bg-rose-500 rounded-full text-white shadow-lg hover:bg-rose-600">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                    <div class="relative group w-full sm:flex-1" x-show="!photoPreview">
+                        <input type="file" name="foto" accept="image/*" required x-ref="fileInput" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                               @change="
+                                    photoFile = $event.target.files[0];
+                                    photoName = photoFile.name;
+                                    const reader = new FileReader();
+                                    reader.onload = (e) => { photoPreview = e.target.result; };
+                                    reader.readAsDataURL(photoFile);
+                               ">
+                        <div class="px-4 py-3 border-2 border-dashed border-white/10 rounded-xl flex items-center justify-center gap-3 group-hover:border-pink-500/50 transition-all bg-white/[0.02]">
+                            <svg class="w-5 h-5 text-slate-500 group-hover:text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest group-hover:text-pink-500 transition-colors">Selecionar Imagem</span>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" x-show="photoPreview" class="w-full sm:w-auto px-6 py-3 bg-pink-600 hover:bg-pink-500 text-white font-black rounded-xl transition-all shadow-lg shadow-pink-500/20 uppercase tracking-widest text-xs" style="display: none;" :disabled="submitting">
+                        <span x-show="!submitting">Fazer Upload</span>
+                        <span x-show="submitting">Enviando...</span>
+                    </button>
+                </div>
+            </form>
         </div>
 
         <form action="{{ route('diario-reports.update', $diarioReport) }}" method="POST" class="space-y-8">

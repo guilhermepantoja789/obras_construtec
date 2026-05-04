@@ -69,13 +69,15 @@ class DiarioPostController extends Controller
             abort(403);
         }
 
-        // LOCK: block deletion if the daily report has already been issued
-        $reportEmitido = DiarioReport::where('obra_id', $diarioPost->obra_id)
-            ->whereDate('data_relatorio', $diarioPost->data_postagem)
-            ->exists();
+        // LOCK: block deletion if the daily report has already been issued, EXCEPT for 'chefe'
+        if (auth()->user()->role !== 'chefe') {
+            $reportEmitido = DiarioReport::where('obra_id', $diarioPost->obra_id)
+                ->whereDate('data_relatorio', $diarioPost->data_postagem)
+                ->exists();
 
-        if ($reportEmitido) {
-            return back()->with('error', 'O diário deste dia já foi encerrado. Não é possível remover publicações de dias com relatório emitido.');
+            if ($reportEmitido) {
+                return back()->with('error', 'O diário deste dia já foi encerrado. Não é possível remover publicações de dias com relatório emitido.');
+            }
         }
 
         if ($diarioPost->foto_path) {
