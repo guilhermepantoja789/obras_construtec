@@ -23,13 +23,17 @@ class DiarioPostController extends Controller
             return back()->with('error', 'Nenhuma obra selecionada.');
         }
 
-        // LOCK: block posts if the daily report has already been issued
-        $reportEmitido = DiarioReport::where('obra_id', $obraId)
-            ->whereDate('data_relatorio', Carbon::today())
-            ->exists();
+        $date = $request->filled('data_postagem') ? Carbon::parse($request->data_postagem) : Carbon::now();
 
-        if ($reportEmitido) {
-            return back()->with('error', 'O diário deste dia já foi encerrado e não pode mais receber publicações.');
+        // LOCK: block posts if the daily report has already been issued, EXCEPT for 'chefe'
+        if (auth()->user()->role !== 'chefe') {
+            $reportEmitido = DiarioReport::where('obra_id', $obraId)
+                ->whereDate('data_relatorio', $date)
+                ->exists();
+
+            if ($reportEmitido) {
+                return back()->with('error', 'O diário deste dia já foi encerrado e não pode mais receber publicações.');
+            }
         }
 
         $file = $request->file('foto');
@@ -56,7 +60,7 @@ class DiarioPostController extends Controller
             'user_id' => auth()->id(),
             'texto' => $validated['texto'],
             'foto_path' => $path,
-            'data_postagem' => Carbon::now(),
+            'data_postagem' => $date,
         ]);
 
         return back()->with('success', 'Atualização publicada no diário!');
@@ -69,13 +73,15 @@ class DiarioPostController extends Controller
             abort(403);
         }
 
-        // LOCK: block deletion if the daily report has already been issued
-        $reportEmitido = DiarioReport::where('obra_id', $diarioPost->obra_id)
-            ->whereDate('data_relatorio', $diarioPost->data_postagem)
-            ->exists();
+        // LOCK: block deletion if the daily report has already been issued, EXCEPT for 'chefe'
+        if (auth()->user()->role !== 'chefe') {
+            $reportEmitido = DiarioReport::where('obra_id', $diarioPost->obra_id)
+                ->whereDate('data_relatorio', $diarioPost->data_postagem)
+                ->exists();
 
-        if ($reportEmitido) {
-            return back()->with('error', 'O diário deste dia já foi encerrado. Não é possível remover publicações de dias com relatório emitido.');
+            if ($reportEmitido) {
+                return back()->with('error', 'O diário deste dia já foi encerrado. Não é possível remover publicações de dias com relatório emitido.');
+            }
         }
 
         if ($diarioPost->foto_path) {

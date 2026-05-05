@@ -59,7 +59,9 @@ class ObraController extends Controller
             abort(403);
         }
 
-        $obra->load(['users', 'diarioPosts', 'etapas', 'propostas']);
+        $obra->load(['users', 'diarioPosts', 'etapas', 'propostas', 'diarioReports' => function($query) {
+            $query->orderBy('data_relatorio', 'desc');
+        }]);
         $chefes = \App\Models\User::where('role', 'chefe')->get();
         
         return view('obras.show', compact('obra', 'chefes'));

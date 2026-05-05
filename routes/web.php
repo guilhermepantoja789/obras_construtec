@@ -25,6 +25,8 @@ Route::middleware('auth')->group(function () {
         Route::post('diario-reports', [\App\Http\Controllers\DiarioReportController::class, 'store'])->name('diario-reports.store');
     });
 
+    Route::get('diario-reports/calendar', [\App\Http\Controllers\DiarioReportController::class, 'calendar'])->name('diario-reports.calendar');
+    Route::get('diario-reports', [\App\Http\Controllers\DiarioReportController::class, 'index'])->name('diario-reports.index');
     Route::get('diario-reports/{diarioReport}', [\App\Http\Controllers\DiarioReportController::class, 'show'])->name('diario-reports.show');
     Route::get('diario-reports/{diarioReport}/pdf', [\App\Http\Controllers\DiarioReportController::class, 'downloadPdf'])->name('diario-reports.pdf');
     Route::get('etapa-obras', [\App\Http\Controllers\EtapaObraController::class, 'index'])->name('etapa-obras.index');
@@ -44,6 +46,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('etapa-obras', \App\Http\Controllers\EtapaObraController::class)->except(['index']);
         Route::get('diario-reports/{diarioReport}/edit', [\App\Http\Controllers\DiarioReportController::class, 'edit'])->name('diario-reports.edit');
         Route::put('diario-reports/{diarioReport}', [\App\Http\Controllers\DiarioReportController::class, 'update'])->name('diario-reports.update');
+        Route::post('diario-reports/{diarioReport}/photos', [\App\Http\Controllers\DiarioReportController::class, 'addPhoto'])->name('diario-reports.add-photo');
     });
 
     // Chefe & Operador
