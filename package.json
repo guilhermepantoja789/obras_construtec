@@ -18,6 +18,8 @@
         "vite": "^8.0.0"
     },
     "dependencies": {
+        "@hotwired/turbo": "^8.0.23",
+        "alpine-turbo-drive-adapter": "^2.2.0",
         "axios": "^1.15.2"
     }
 }

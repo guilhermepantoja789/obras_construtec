@@ -14,6 +14,14 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+        <style>
+            .turbo-progress-bar {
+                height: 3px;
+                background-color: #f59e0b; /* bg-amber-500 */
+                z-index: 9999;
+            }
+        </style>
+
         <!-- PWA -->
         <link rel="manifest" href="{{ asset('manifest.json') }}">
         <meta name="mobile-web-app-capable" content="yes">
@@ -27,6 +35,75 @@
         <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
         
         <script>
+            // Gerador Automático de Splash Screen para iOS
+            (function() {
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                if (!isIOS) return;
+
+                // Não re-gerar se já estiver rodando standalone
+                if (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+                    // Mas precisamos do link no head? O iOS lê isso na hora do 'Add to Home Screen' ou ao abrir.
+                    // Para garantir, vamos adicionar.
+                }
+
+                function setupSplash() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const width = window.screen.width * window.devicePixelRatio;
+                    const height = window.screen.height * window.devicePixelRatio;
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    // Cor de fundo do app (Slate 900)
+                    ctx.fillStyle = '#0f172a';
+                    ctx.fillRect(0, 0, width, height);
+
+                    // Padrão de textura stardust (opcional, ou podemos deixar apenas sólido que fica mais limpo e rápido)
+
+                    // Ícone/Texto Centralizado
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold ' + (40 * window.devicePixelRatio) + 'px "Inter", sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+
+                    // Tentaremos carregar o ícone se quisermos
+                    const logoImg = new Image();
+                    logoImg.onload = function() {
+                        const imgSize = 120 * window.devicePixelRatio;
+                        ctx.drawImage(logoImg, (width - imgSize) / 2, (height - imgSize) / 2 - (30 * window.devicePixelRatio), imgSize, imgSize);
+
+                        ctx.fillText('DIÁRIO DE OBRAS', width / 2, height / 2 + (60 * window.devicePixelRatio));
+
+                        const dataURL = canvas.toDataURL('image/png');
+                        const link = document.createElement('link');
+                        link.setAttribute('rel', 'apple-touch-startup-image');
+                        link.setAttribute('media', '(device-width: ' + window.screen.width + 'px) and (device-height: ' + window.screen.height + 'px) and (-webkit-device-pixel-ratio: ' + window.devicePixelRatio + ')');
+                        link.setAttribute('href', dataURL);
+                        document.head.appendChild(link);
+                    };
+                    logoImg.src = "{{ asset('icon.png') }}"; // Certifique-se de que icon.png é a logo quadrada.
+
+                    // Fallback se a imagem falhar/demorar muito (só texto)
+                    setTimeout(() => {
+                        if (!document.querySelector('link[rel="apple-touch-startup-image"]')) {
+                            ctx.fillText('DIÁRIO DE OBRAS', width / 2, height / 2);
+                            const dataURL = canvas.toDataURL('image/png');
+                            const link = document.createElement('link');
+                            link.setAttribute('rel', 'apple-touch-startup-image');
+                            link.setAttribute('href', dataURL);
+                            document.head.appendChild(link);
+                        }
+                    }, 500);
+                }
+
+                if (document.readyState === 'complete') {
+                    setupSplash();
+                } else {
+                    window.addEventListener('load', setupSplash);
+                }
+            })();
+
             window.deferredPrompt = null;
 
             if ('serviceWorker' in navigator) {
