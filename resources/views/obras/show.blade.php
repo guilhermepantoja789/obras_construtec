@@ -160,6 +160,9 @@
                             </div>
                             <h3 class="text-sm font-bold text-white uppercase tracking-widest">Histórico de Diários</h3>
                         </div>
+                        <a href="{{ route('diario-reports.calendar') }}" class="text-[10px] font-black text-blue-500 uppercase tracking-widest hover:text-blue-400 transition-colors mb-4 block">
+                            Ver Calendário →
+                        </a>
 
                         <div class="space-y-3">
                             @forelse($obra->diarioReports as $report)

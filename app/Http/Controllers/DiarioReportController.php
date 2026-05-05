@@ -53,16 +53,19 @@ class DiarioReportController extends Controller
         return view('diario.reports.index', compact('obra', 'reports'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $obraId = session('active_obra_id');
         if (!$obraId) return redirect()->route('obras.index');
 
         $obra = Obra::findOrFail($obraId);
-        
-        // Pre-fill services from today's posts
+
+        // Accept retroactive date
+        $date = $request->has('date') ? Carbon::parse($request->date) : Carbon::today();
+
+        // Pre-fill services from that day's posts
         $todayPosts = DiarioPost::where('obra_id', $obraId)
-            ->whereDate('data_postagem', Carbon::today())
+            ->whereDate('data_postagem', $date)
             ->pluck('texto')
             ->filter()
             ->implode("\n- ");
@@ -71,12 +74,13 @@ class DiarioReportController extends Controller
             $todayPosts = "- " . $todayPosts;
         }
 
-        return view('diario.reports.create', compact('obra', 'todayPosts'));
+        return view('diario.reports.create', compact('obra', 'todayPosts', 'date'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'data_relatorio' => 'nullable|date',
             'clima_horario' => 'nullable|array',
             'mao_de_obra' => 'nullable|array',
             'maquinario' => 'nullable|array',
@@ -92,16 +96,17 @@ class DiarioReportController extends Controller
         ]);
 
         $obraId = session('active_obra_id');
+        $date = $request->filled('data_relatorio') ? Carbon::parse($request->data_relatorio) : Carbon::today();
 
         DiarioReport::updateOrCreate(
-            ['obra_id' => $obraId, 'data_relatorio' => Carbon::today()],
+            ['obra_id' => $obraId, 'data_relatorio' => $date],
             array_merge($validated, [
                 'user_id' => auth()->id(),
                 'dia_improdutivo' => $request->has('dia_improdutivo')
             ])
         );
 
-        return redirect()->route('feed.index')->with('success', 'Relatório diário finalizado com sucesso!');
+        return redirect()->route('diario-reports.index')->with('success', 'Relatório diário finalizado com sucesso!');
     }
 
     public function show(DiarioReport $diarioReport)
@@ -271,6 +276,39 @@ class DiarioReportController extends Controller
         ]);
 
         return back()->with('success', 'Foto adicionada ao diário retroativamente com sucesso.');
+    }
+
+    public function calendar(Request $request)
+    {
+        $obraId = session('active_obra_id');
+        if (!$obraId) {
+            return redirect()->route('obras.index')->with('error', 'Selecione uma obra primeiro.');
+        }
+
+        $obra = Obra::findOrFail($obraId);
+        
+        $month = $request->input('month', date('m'));
+        $year = $request->input('year', date('Y'));
+        
+        $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+        $endDate = $startDate->copy()->endOfMonth();
+        
+        $reports = DiarioReport::where('obra_id', $obraId)
+            ->whereBetween('data_relatorio', [$startDate, $endDate])
+            ->get()
+            ->keyBy(function($item) {
+                return $item->data_relatorio->format('Y-m-d');
+            });
+
+        // Get posts count per day to show activity
+        $posts = DiarioPost::where('obra_id', $obraId)
+            ->whereBetween('data_postagem', [$startDate, $endDate])
+            ->get()
+            ->groupBy(function($item) {
+                return $item->data_postagem->format('Y-m-d');
+            });
+
+        return view('diario.reports.calendar', compact('obra', 'reports', 'posts', 'startDate', 'month', 'year'));
     }
 }
 

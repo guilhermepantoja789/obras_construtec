@@ -2,9 +2,11 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <div>
-                <p class="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] mb-1">Finalização do Dia</p>
+                <p class="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] mb-1">
+                    {{ $date->isToday() ? 'Finalização do Dia' : 'Lançamento Retroativo' }}
+                </p>
                 <h2 class="font-black text-xl text-white leading-tight uppercase tracking-tight">
-                    Relatório Diário
+                    Relatório Diário - {{ $date->translatedFormat('d \d\e F') }}
                 </h2>
             </div>
             <a href="{{ route('feed.index') }}" class="text-slate-500 hover:text-white transition-colors">
@@ -25,6 +27,7 @@
     }">
         <form action="{{ route('diario-reports.store') }}" method="POST" class="space-y-8">
             @csrf
+            <input type="hidden" name="data_relatorio" value="{{ $date->format('Y-m-d') }}">
             
             <!-- Sessão 1: Auditoria de Tempo (07:00 as 20:00) -->
             <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl">

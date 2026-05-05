@@ -14,6 +14,13 @@
                     <p class="text-[10px] font-bold text-cyan-500 uppercase tracking-widest">{{ $obra->nome }}</p>
                 </div>
             </div>
+            
+            <a href="{{ route('diario-reports.calendar') }}" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-black uppercase tracking-widest text-[10px] rounded-xl transition-all shadow-lg shadow-cyan-600/20 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <span class="hidden sm:inline">Calendário</span>
+            </a>
         </div>
     </x-slot>
 
