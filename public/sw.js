@@ -1,6 +1,9 @@
-const CACHE_NAME = 'diario-obras-v4';
-const OFFLINE_URL = '/offline';
+const CACHE_NAME = 'diario-obras-v5';
+const OFFLINE_URL = 'offline';
 const SYNC_TAG = 'sync-diario-posts';
+
+// URLs relativas ao diretório do SW (compatível com deploy em subdiretório)
+const apiUrl = (path) => new URL(path, self.location).href;
 
 // ==========================================
 // INSTALL: Cache static assets + offline page
@@ -10,7 +13,7 @@ self.addEventListener('install', (event) => {
         caches.open(CACHE_NAME).then((cache) => {
             return cache.addAll([
                 OFFLINE_URL,
-                '/',
+                './',
             ]);
         })
     );
@@ -73,7 +76,7 @@ async function syncPendingPosts() {
     // 1. Fetch a fresh CSRF token using the existing session cookie
     let freshToken = null;
     try {
-        const tokenResponse = await fetch('/csrf-token', { credentials: 'include' });
+        const tokenResponse = await fetch(apiUrl('csrf-token'), { credentials: 'include' });
         if (tokenResponse.ok) {
             const json = await tokenResponse.json();
             freshToken = json.token;
@@ -94,7 +97,7 @@ async function syncPendingPosts() {
                 formData.append('foto', blob, post.fotoName);
             }
 
-            const response = await fetch('/diario-posts', {
+            const response = await fetch(apiUrl('diario-posts'), {
                 method: 'POST',
                 body: formData,
                 credentials: 'include',

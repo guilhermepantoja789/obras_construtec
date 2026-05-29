@@ -67,7 +67,6 @@ jobs:
           php artisan route:cache
           php artisan view:cache
           php artisan migrate --force
-          php artisan route:clear
           rm -rf public/storage
           cd public && ln -s ../storage/app/public storage && cd ..
           mkdir -p ~/public_html/construtec/

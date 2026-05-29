@@ -14,22 +14,13 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::resource('obras', \App\Http\Controllers\ObraController::class)->only(['index', 'show']);
-    
+    Route::resource('obras', \App\Http\Controllers\ObraController::class)
+        ->middleware('role:chefe', ['only' => ['create', 'store', 'edit', 'update', 'destroy']]);
+
     // Public/All roles (View only or basic access)
     Route::get('/feed', [\App\Http\Controllers\FeedController::class, 'index'])->name('feed.index');
-    
-    // Moved up to avoid conflict with {diarioReport} parameter
-    Route::middleware('role:chefe,operador')->group(function () {
-        Route::get('diario-reports/create', [\App\Http\Controllers\DiarioReportController::class, 'create'])->name('diario-reports.create');
-        Route::post('diario-reports', [\App\Http\Controllers\DiarioReportController::class, 'store'])->name('diario-reports.store');
-    });
 
-    Route::get('diario-reports/calendar', [\App\Http\Controllers\DiarioReportController::class, 'calendar'])->name('diario-reports.calendar');
-    Route::get('diario-reports', [\App\Http\Controllers\DiarioReportController::class, 'index'])->name('diario-reports.index');
-    Route::get('diario-reports/{diarioReport}', [\App\Http\Controllers\DiarioReportController::class, 'show'])->name('diario-reports.show');
-    
-    // Moved up to avoid conflict with {diarioReport} parameter
+    // create/store antes de {diarioReport} para evitar conflito de rota
     Route::middleware('role:chefe,operador')->group(function () {
         Route::get('diario-reports/create', [\App\Http\Controllers\DiarioReportController::class, 'create'])->name('diario-reports.create');
         Route::post('diario-reports', [\App\Http\Controllers\DiarioReportController::class, 'store'])->name('diario-reports.store');
@@ -43,7 +34,6 @@ Route::middleware('auth')->group(function () {
 
     // Chefe Only
     Route::middleware('role:chefe')->group(function () {
-        Route::resource('obras', \App\Http\Controllers\ObraController::class)->except(['index', 'show']);
         Route::resource('users', \App\Http\Controllers\UserController::class);
         Route::resource('propostas', \App\Http\Controllers\PropostaController::class);
         Route::post('propostas/import', [\App\Http\Controllers\PropostaController::class, 'import'])->name('propostas.import');
