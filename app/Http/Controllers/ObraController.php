@@ -30,6 +30,8 @@ class ObraController extends Controller
 
     public function store(Request $request)
     {
+        $request->merge($this->normalizeObraRequest($request));
+
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'localizacao' => 'nullable|string|max:255',
@@ -39,14 +41,16 @@ class ObraController extends Controller
             'cidade' => 'nullable|string|max:255',
             'estado' => 'nullable|string|max:2',
             'data_inicio' => 'nullable|date',
-            'data_fim_prevista' => 'nullable|date',
+            'data_fim_prevista' => 'nullable|date|after_or_equal:data_inicio',
             'status' => 'required|string',
             'contratante' => 'nullable|string',
             'cnpj_contratante' => 'nullable|string|max:18',
             'empresa_contratada' => 'nullable|string',
             'cnpj_empresa_contratada' => 'nullable|string|max:18',
             'engenheiro_responsavel' => 'nullable|string',
-            'prazo_dias' => 'nullable|integer',
+            'prazo_dias' => 'nullable|integer|min:0',
+        ], [
+            'data_fim_prevista.after_or_equal' => 'A previsão de término deve ser igual ou posterior à data de início.',
         ]);
 
         Obra::create($this->prepareObraData($validated));
@@ -75,6 +79,8 @@ class ObraController extends Controller
 
     public function update(Request $request, Obra $obra)
     {
+        $request->merge($this->normalizeObraRequest($request));
+
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'localizacao' => 'nullable|string|max:255',
@@ -84,14 +90,16 @@ class ObraController extends Controller
             'cidade' => 'nullable|string|max:255',
             'estado' => 'nullable|string|max:2',
             'data_inicio' => 'nullable|date',
-            'data_fim_prevista' => 'nullable|date',
+            'data_fim_prevista' => 'nullable|date|after_or_equal:data_inicio',
             'status' => 'required|string',
             'contratante' => 'nullable|string',
             'cnpj_contratante' => 'nullable|string|max:18',
             'empresa_contratada' => 'nullable|string',
             'cnpj_empresa_contratada' => 'nullable|string|max:18',
             'engenheiro_responsavel' => 'nullable|string',
-            'prazo_dias' => 'nullable|integer',
+            'prazo_dias' => 'nullable|integer|min:0',
+        ], [
+            'data_fim_prevista.after_or_equal' => 'A previsão de término deve ser igual ou posterior à data de início.',
         ]);
 
         $obra->update($this->prepareObraData($validated));
@@ -99,15 +107,38 @@ class ObraController extends Controller
         return redirect()->route('obras.index')->with('success', 'Obra atualizada com sucesso!');
     }
 
+    private function normalizeObraRequest(Request $request): array
+    {
+        $data = [];
+
+        foreach (['data_inicio', 'data_fim_prevista'] as $field) {
+            $value = $request->input($field);
+            $data[$field] = ($value === null || $value === '') ? null : $value;
+        }
+
+        $prazo = $request->input('prazo_dias');
+        $data['prazo_dias'] = ($prazo === null || $prazo === '') ? null : $prazo;
+
+        return $data;
+    }
+
     private function prepareObraData(array $validated): array
     {
+        foreach (['data_inicio', 'data_fim_prevista'] as $field) {
+            if (empty($validated[$field])) {
+                $validated[$field] = null;
+            }
+        }
+
         if ($validated['prazo_dias'] === null) {
             if (! empty($validated['data_inicio']) && ! empty($validated['data_fim_prevista'])) {
                 $validated['prazo_dias'] = Carbon::parse($validated['data_inicio'])
                     ->diffInDays(Carbon::parse($validated['data_fim_prevista']));
-            } else {
-                $validated['prazo_dias'] = 0;
             }
+        }
+
+        if ($validated['prazo_dias'] === null) {
+            $validated['prazo_dias'] = 0;
         }
 
         return $validated;

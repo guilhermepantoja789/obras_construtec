@@ -8,7 +8,7 @@
     <div class="max-w-4xl mx-auto">
         <div class="bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden shadow-2xl rounded-2xl">
             <div class="p-8">
-                <form action="{{ route('obras.update', $obra) }}" method="POST" class="space-y-6">
+                <form id="obra-edit-form" action="{{ route('obras.update', $obra) }}" method="POST" class="space-y-6">
                     @csrf
                     @method('PATCH')
                     
@@ -54,21 +54,24 @@
                             <x-input-error class="mt-2" :messages="$errors->get('localizacao')" />
                         </div>
 
-                        <div>
-                            <x-input-label for="data_inicio" :value="__('Data de Início')" />
-                            <x-text-input id="data_inicio" name="data_inicio" type="date" class="mt-1 block w-full" :value="old('data_inicio', $obra->data_inicio ? $obra->data_inicio->format('Y-m-d') : '')" />
-                            <x-input-error class="mt-2" :messages="$errors->get('data_inicio')" />
-                        </div>
+                        <x-date-br-input
+                            name="data_inicio"
+                            label="Data de Início"
+                            :optional="true"
+                            :value="old('data_inicio', $obra->data_inicio ? $obra->data_inicio->format('Y-m-d') : '')"
+                        />
 
-                        <div>
-                            <x-input-label for="data_fim_prevista" :value="__('Previsão de Término')" />
-                            <x-text-input id="data_fim_prevista" name="data_fim_prevista" type="date" class="mt-1 block w-full" :value="old('data_fim_prevista', $obra->data_fim_prevista ? $obra->data_fim_prevista->format('Y-m-d') : '')" />
-                            <x-input-error class="mt-2" :messages="$errors->get('data_fim_prevista')" />
-                        </div>
+                        <x-date-br-input
+                            name="data_fim_prevista"
+                            label="Previsão de Término"
+                            :optional="true"
+                            :value="old('data_fim_prevista', $obra->data_fim_prevista ? $obra->data_fim_prevista->format('Y-m-d') : '')"
+                        />
 
                         <div>
                             <x-input-label for="prazo_dias" :value="__('Prazo Total (Dias)')" />
-                            <x-text-input id="prazo_dias" name="prazo_dias" type="number" class="mt-1 block w-full" :value="old('prazo_dias', $obra->prazo_dias)" placeholder="Ex: 180" />
+                            <x-text-input id="prazo_dias" name="prazo_dias" type="number" min="0" class="mt-1 block w-full" :value="old('prazo_dias', $obra->data_fim_prevista ? $obra->prazo_dias : '')" placeholder="Ex: 180" />
+                            <p class="mt-1.5 text-[10px] text-slate-600">Opcional — calculado pelas datas quando início e término estiverem preenchidos</p>
                             <x-input-error class="mt-2" :messages="$errors->get('prazo_dias')" />
                         </div>
 
@@ -127,7 +130,22 @@
         </div>
     </div>
 
+    @include('partials.date-br-script')
+
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initDateBrFields();
+
+            document.getElementById('obra-edit-form')?.addEventListener('submit', (event) => {
+                const result = prepareDateBrFieldsForSubmit(event.target);
+                if (!result.ok) {
+                    event.preventDefault();
+                    result.input.focus();
+                    alert('Informe uma data válida no formato DD/MM/AAAA.');
+                }
+            });
+        });
+
         function buscarCep(valor) {
             const cep = valor.replace(/\D/g, '');
             if (cep.length !== 8) return;

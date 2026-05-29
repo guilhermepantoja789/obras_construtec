@@ -19,7 +19,7 @@
         <div class="bg-white/5 sm:backdrop-blur-xl border-y sm:border border-white/10 overflow-hidden shadow-2xl sm:rounded-2xl">
             <form id="obra-form" action="{{ route('obras.store') }}" method="POST"
                   class="pb-28 sm:pb-0"
-                  @submit="submitting = true">
+                  @submit="handleSubmit($event)">
                 @csrf
 
                 <div class="p-4 sm:p-8 space-y-5 sm:space-y-8">
@@ -137,25 +137,17 @@
 
                         <div class="space-y-4 p-4 sm:p-5 bg-white/[0.03] rounded-2xl border border-white/5">
                             <div class="grid grid-cols-2 gap-3 sm:gap-4">
-                                <div>
-                                    <x-input-label for="data_inicio" :value="__('Início')" />
-                                    <x-text-input id="data_inicio" name="data_inicio" type="date" class="mt-1 block w-full mobile-input" :value="old('data_inicio')" />
-                                    <x-input-error class="mt-2" :messages="$errors->get('data_inicio')" />
-                                </div>
-                                <div>
-                                    <x-input-label for="data_fim_prevista" :value="__('Término')" />
-                                    <x-text-input id="data_fim_prevista" name="data_fim_prevista" type="date" class="mt-1 block w-full mobile-input" :value="old('data_fim_prevista')" />
-                                    <x-input-error class="mt-2" :messages="$errors->get('data_fim_prevista')" />
-                                </div>
+                                <x-date-br-input name="data_inicio" label="Início" :optional="true" inputClass="mobile-input" />
+                                <x-date-br-input name="data_fim_prevista" label="Término" :optional="true" inputClass="mobile-input" />
                             </div>
 
                             <div>
                                 <x-input-label for="prazo_dias" :value="__('Prazo Total (Dias)')" />
-                                <x-text-input id="prazo_dias" name="prazo_dias" type="number" inputmode="numeric" class="mt-1 block w-full mobile-input" :value="old('prazo_dias')" placeholder="Ex: 180" />
+                                <x-text-input id="prazo_dias" name="prazo_dias" type="number" inputmode="numeric" min="0" class="mt-1 block w-full mobile-input" :value="old('prazo_dias')" placeholder="Ex: 180" />
                                 <p x-show="prazoCalculado !== null && !prazoManual" x-cloak class="mt-1.5 text-[10px] text-blue-400 font-bold uppercase tracking-widest">
                                     Calculado automaticamente: <span x-text="prazoCalculado"></span> dias
                                 </p>
-                                <p class="mt-1.5 text-[10px] text-slate-600">Opcional — calculado pelas datas se deixar em branco</p>
+                                <p class="mt-1.5 text-[10px] text-slate-600">Opcional — calculado pelas datas quando início e término estiverem preenchidos</p>
                                 <x-input-error class="mt-2" :messages="$errors->get('prazo_dias')" />
                             </div>
                         </div>
@@ -254,6 +246,8 @@
         }
     </style>
 
+    @include('partials.date-br-script')
+
     <script>
         function obraForm() {
             return {
@@ -263,14 +257,30 @@
                 prazoCalculado: null,
 
                 init() {
+                    initDateBrFields(this.$root);
                     this.applyCepMask();
                     this.applyCnpjMasks();
-                    document.getElementById('data_inicio')?.addEventListener('change', () => this.calcularPrazo());
-                    document.getElementById('data_fim_prevista')?.addEventListener('change', () => this.calcularPrazo());
+                    ['data_inicio', 'data_fim_prevista'].forEach((id) => {
+                        const el = document.getElementById(id);
+                        el?.addEventListener('input', () => this.calcularPrazo());
+                        el?.addEventListener('change', () => this.calcularPrazo());
+                    });
                     document.getElementById('prazo_dias')?.addEventListener('input', (e) => {
                         if (e.target.value !== '') this.prazoManual = true;
                     });
                     this.calcularPrazo();
+                },
+
+                handleSubmit(event) {
+                    const result = prepareDateBrFieldsForSubmit(event.target);
+                    if (!result.ok) {
+                        event.preventDefault();
+                        result.input.focus();
+                        alert('Informe uma data válida no formato DD/MM/AAAA.');
+                        return;
+                    }
+
+                    this.submitting = true;
                 },
 
                 applyCepMask() {
@@ -293,11 +303,19 @@
                 calcularPrazo() {
                     if (this.prazoManual) return;
 
-                    const inicio = document.getElementById('data_inicio').value;
-                    const fim = document.getElementById('data_fim_prevista').value;
+                    const inicioEl = document.getElementById('data_inicio');
+                    const fimEl = document.getElementById('data_fim_prevista');
+                    const prazoEl = document.getElementById('prazo_dias');
+                    const inicio = readDateFieldValue(inicioEl);
+                    const fim = readDateFieldValue(fimEl);
+
+                    if (inicio === null || fim === null) {
+                        return;
+                    }
 
                     if (!inicio || !fim) {
                         this.prazoCalculado = null;
+                        prazoEl.value = '';
                         return;
                     }
 
@@ -307,9 +325,10 @@
 
                     if (diff >= 0) {
                         this.prazoCalculado = diff;
-                        document.getElementById('prazo_dias').value = diff;
+                        prazoEl.value = diff;
                     } else {
                         this.prazoCalculado = null;
+                        prazoEl.value = '';
                     }
                 },
 
