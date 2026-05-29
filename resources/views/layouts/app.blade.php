@@ -261,7 +261,7 @@
                         </div>
 
                         <div class="space-y-2">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Registros Fotográficos</label>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Registros Fotográficos <span class="text-amber-500">*</span></label>
                             
                             <div x-show="photoPreview" class="relative w-full aspect-video rounded-2xl overflow-hidden border border-white/10 mb-4" style="display: none;">
                                 <img :src="photoPreview" class="w-full h-full object-cover">
@@ -731,14 +731,20 @@
         } catch(e) {}
 
         let synced = 0;
+        let removed = 0;
         for (const post of posts) {
             try {
-                const fd = new FormData();
-                fd.append('texto', post.texto);
-                fd.append('_token', freshToken || post.token);
-                if (post.fotoBase64) {
-                    fd.append('foto', base64ToBlob(post.fotoBase64, post.fotoMime), post.fotoName);
+                if (!post.fotoBase64) {
+                    const delTx = db.transaction('pending-posts', 'readwrite');
+                    delTx.objectStore('pending-posts').delete(post.id);
+                    removed++;
+                    continue;
                 }
+
+                const fd = new FormData();
+                fd.append('texto', post.texto || '');
+                fd.append('_token', freshToken || post.token);
+                fd.append('foto', base64ToBlob(post.fotoBase64, post.fotoMime), post.fotoName);
 
                 const resp = await fetch("{{ route('diario-posts.store') }}", {
                     method: 'POST',
@@ -748,10 +754,13 @@
                 });
 
                 if (resp.ok || resp.redirected || resp.status === 302 || resp.status === 200) {
-                    // Delete from queue
                     const delTx = db.transaction('pending-posts', 'readwrite');
                     delTx.objectStore('pending-posts').delete(post.id);
                     synced++;
+                } else if (resp.status === 422) {
+                    const delTx = db.transaction('pending-posts', 'readwrite');
+                    delTx.objectStore('pending-posts').delete(post.id);
+                    removed++;
                 }
             } catch(e) {
                 console.error('Sync error for post', post.id, e);
@@ -760,6 +769,11 @@
 
         if (synced > 0) {
             showToast(`✓ ${synced} publicação(ões) enviada(s) com sucesso!`);
+        }
+        if (removed > 0) {
+            showToast('Publicação inválida removida da fila: foto obrigatória.', 'rose');
+        }
+        if (synced > 0 || removed > 0) {
             updatePendingBadge();
         }
     }
@@ -787,7 +801,10 @@
         const fileInput = document.getElementById('post-foto');
         const file = fileInput && fileInput.files[0];
 
-        if (!texto && !file) return;
+        if (!file) {
+            showToast('Selecione uma foto para publicar no diário.', 'rose');
+            return;
+        }
 
         alpineData.submitting = true;
 
@@ -795,12 +812,9 @@
             document.getElementById('diario-post-form').submit();
         } else {
             try {
-                let fotoBase64 = null, fotoMime = null, fotoName = null;
-                if (file) {
-                    fotoBase64 = await fileToBase64(file);
-                    fotoMime = file.type;
-                    fotoName = file.name;
-                }
+                const fotoBase64 = await fileToBase64(file);
+                const fotoMime = file.type;
+                const fotoName = file.name;
 
                 const db = await openOfflineDB();
                 await new Promise((res, rej) => {
@@ -869,6 +883,10 @@
         navigator.serviceWorker.addEventListener('message', (event) => {
             if (event.data?.type === 'sync-success') {
                 showToast('✓ Post sincronizado com sucesso!');
+                updatePendingBadge();
+            }
+            if (event.data?.type === 'sync-error') {
+                showToast(event.data.message || 'Erro ao sincronizar publicação.', 'rose');
                 updatePendingBadge();
             }
         });

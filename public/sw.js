@@ -1,4 +1,4 @@
-const CACHE_NAME = 'diario-obras-v5';
+const CACHE_NAME = 'diario-obras-v6';
 const OFFLINE_URL = 'offline';
 const SYNC_TAG = 'sync-diario-posts';
 
@@ -87,15 +87,24 @@ async function syncPendingPosts() {
 
     for (const post of posts) {
         try {
+            if (!post.fotoBase64) {
+                await deletePendingPost(db, post.id);
+                const clients = await self.clients.matchAll();
+                clients.forEach(client => {
+                    client.postMessage({
+                        type: 'sync-error',
+                        message: 'Publicação inválida removida da fila: foto obrigatória.',
+                    });
+                });
+                continue;
+            }
+
             const formData = new FormData();
-            formData.append('texto', post.texto);
-            // Use fresh token if available, else fall back to stored token
+            formData.append('texto', post.texto || '');
             formData.append('_token', freshToken || post.token);
 
-            if (post.fotoBase64) {
-                const blob = base64ToBlob(post.fotoBase64, post.fotoMime);
-                formData.append('foto', blob, post.fotoName);
-            }
+            const blob = base64ToBlob(post.fotoBase64, post.fotoMime);
+            formData.append('foto', blob, post.fotoName);
 
             const response = await fetch(apiUrl('diario-posts'), {
                 method: 'POST',
@@ -109,6 +118,15 @@ async function syncPendingPosts() {
                 const clients = await self.clients.matchAll();
                 clients.forEach(client => {
                     client.postMessage({ type: 'sync-success', postId: post.id });
+                });
+            } else if (response.status === 422) {
+                await deletePendingPost(db, post.id);
+                const clients = await self.clients.matchAll();
+                clients.forEach(client => {
+                    client.postMessage({
+                        type: 'sync-error',
+                        message: 'Publicação inválida removida da fila: foto obrigatória.',
+                    });
                 });
             } else {
                 console.error('Sync failed with status:', response.status);

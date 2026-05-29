@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Obra;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class ObraController extends Controller
@@ -48,7 +49,7 @@ class ObraController extends Controller
             'prazo_dias' => 'nullable|integer',
         ]);
 
-        Obra::create($validated);
+        Obra::create($this->prepareObraData($validated));
 
         return redirect()->route('obras.index')->with('success', 'Obra criada com sucesso!');
     }
@@ -93,9 +94,23 @@ class ObraController extends Controller
             'prazo_dias' => 'nullable|integer',
         ]);
 
-        $obra->update($validated);
+        $obra->update($this->prepareObraData($validated));
 
         return redirect()->route('obras.index')->with('success', 'Obra atualizada com sucesso!');
+    }
+
+    private function prepareObraData(array $validated): array
+    {
+        if ($validated['prazo_dias'] === null) {
+            if (! empty($validated['data_inicio']) && ! empty($validated['data_fim_prevista'])) {
+                $validated['prazo_dias'] = Carbon::parse($validated['data_inicio'])
+                    ->diffInDays(Carbon::parse($validated['data_fim_prevista']));
+            } else {
+                $validated['prazo_dias'] = 0;
+            }
+        }
+
+        return $validated;
     }
 
     public function destroy(Obra $obra)
