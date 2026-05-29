@@ -726,7 +726,7 @@
         // Fetch a fresh CSRF token
         let freshToken = null;
         try {
-            const r = await fetch("{{ asset('csrf-token') }}", { credentials: 'include' });
+            const r = await fetch("{{ route('csrf.token') }}", { credentials: 'include' });
             if (r.ok) freshToken = (await r.json()).token;
         } catch(e) {}
 
@@ -740,7 +740,7 @@
                     fd.append('foto', base64ToBlob(post.fotoBase64, post.fotoMime), post.fotoName);
                 }
 
-                const resp = await fetch("{{ asset('diario-posts') }}", {
+                const resp = await fetch("{{ route('diario-posts.store') }}", {
                     method: 'POST',
                     body: fd,
                     credentials: 'include',
@@ -814,9 +814,11 @@
                 });
 
                 // Android: register Background Sync
-                if ('serviceWorker' in navigator && 'SyncManager' in window) {
+                if ('serviceWorker' in navigator) {
                     const reg = await navigator.serviceWorker.ready;
-                    await reg.sync.register('sync-diario-posts');
+                    if ('sync' in reg) {
+                        await reg.sync.register('sync-diario-posts');
+                    }
                 }
 
                 alpineData.submitting = false;

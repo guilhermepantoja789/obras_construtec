@@ -28,6 +28,16 @@ Route::middleware('auth')->group(function () {
     Route::get('diario-reports/calendar', [\App\Http\Controllers\DiarioReportController::class, 'calendar'])->name('diario-reports.calendar');
     Route::get('diario-reports', [\App\Http\Controllers\DiarioReportController::class, 'index'])->name('diario-reports.index');
     Route::get('diario-reports/{diarioReport}', [\App\Http\Controllers\DiarioReportController::class, 'show'])->name('diario-reports.show');
+    
+    // Moved up to avoid conflict with {diarioReport} parameter
+    Route::middleware('role:chefe,operador')->group(function () {
+        Route::get('diario-reports/create', [\App\Http\Controllers\DiarioReportController::class, 'create'])->name('diario-reports.create');
+        Route::post('diario-reports', [\App\Http\Controllers\DiarioReportController::class, 'store'])->name('diario-reports.store');
+    });
+
+    Route::get('diario-reports/calendar', [\App\Http\Controllers\DiarioReportController::class, 'calendar'])->name('diario-reports.calendar');
+    Route::get('diario-reports', [\App\Http\Controllers\DiarioReportController::class, 'index'])->name('diario-reports.index');
+    Route::get('diario-reports/{diarioReport}', [\App\Http\Controllers\DiarioReportController::class, 'show'])->name('diario-reports.show');
     Route::get('diario-reports/{diarioReport}/pdf', [\App\Http\Controllers\DiarioReportController::class, 'downloadPdf'])->name('diario-reports.pdf');
     Route::get('etapa-obras', [\App\Http\Controllers\EtapaObraController::class, 'index'])->name('etapa-obras.index');
 
