@@ -76,7 +76,9 @@ class EtapaObraController extends Controller
     public function store(Request $request)
     {
         $obraId = session('active_obra_id');
-        if (!$obraId) return back();
+        if (!$obraId) {
+            return back()->with('error', 'Selecione uma obra primeiro.');
+        }
 
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
@@ -84,8 +86,10 @@ class EtapaObraController extends Controller
             'descricao' => 'nullable|string',
             'data_inicio_prevista' => 'nullable|date',
             'data_fim_prevista' => 'nullable|date',
-            'ordem' => 'nullable|integer',
+            'ordem' => 'nullable|string',
         ]);
+
+        $validated['descricao'] = $validated['descricao'] ?? $validated['nome'];
 
         EtapaObra::create(array_merge($validated, ['obra_id' => $obraId]));
 
@@ -107,8 +111,10 @@ class EtapaObraController extends Controller
             'data_fim_real' => 'nullable|date',
             'percentual_concluido' => 'nullable|integer|min:0|max:100',
             'status' => 'nullable|in:pendente,em_progresso,concluida,atrasada',
-            'ordem' => 'nullable|integer',
+            'ordem' => 'nullable|string',
         ]);
+
+        $validated['descricao'] = $validated['descricao'] ?? $validated['nome'];
 
         $etapaObra->update($validated);
 

@@ -19,8 +19,8 @@
 
     <div class="max-w-5xl mx-auto space-y-6 pb-24 px-4" 
         x-data="{ 
-            showAddEtapaModal: false, 
-            showEditEtapaModal: false,
+            showAddEtapaModal: {{ ($errors->any() && old('_method') !== 'PUT') ? 'true' : 'false' }}, 
+            showEditEtapaModal: {{ ($errors->any() && old('_method') === 'PUT') ? 'true' : 'false' }},
             selectedEtapa: null,
             openEditModal(etapa) {
                 this.selectedEtapa = etapa;
@@ -106,20 +106,20 @@
                     @csrf
                     <div>
                         <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Nome da Etapa</label>
-                        <input type="text" name="nome" required placeholder="Ex: Fundação, Alvenaria..." class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm focus:border-blue-500">
+                        <input type="text" name="nome" required placeholder="Ex: Fundação, Alvenaria..." value="{{ old('nome') }}" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm focus:border-blue-500">
                     </div>
                     <input type="hidden" name="valor" value="0">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Data Prevista</label>
-                            <input type="date" name="data_inicio_prevista" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm">
+                            <input type="date" name="data_inicio_prevista" value="{{ old('data_inicio_prevista') }}" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm">
                         </div>
                         <div>
                             <div class="flex items-center justify-between mb-1">
                                 <label class="text-[10px] font-bold text-slate-500 uppercase block">Ordem</label>
                                 <span class="text-[8px] text-slate-600 uppercase font-black">Posição na lista</span>
                             </div>
-                            <input type="number" name="ordem" placeholder="1, 2, 3..." class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm">
+                            <input type="number" name="ordem" placeholder="1, 2, 3..." value="{{ old('ordem') }}" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm">
                         </div>
                     </div>
                     <p class="text-[9px] text-slate-600 uppercase font-bold leading-relaxed">

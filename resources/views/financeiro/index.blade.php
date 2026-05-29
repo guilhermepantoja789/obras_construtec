@@ -18,7 +18,7 @@
     </x-slot>
 
     <div class="max-w-5xl mx-auto space-y-6 pb-24 px-4" 
-        x-data="{ showAddPagamentoModal: false }"
+        x-data="{ showAddPagamentoModal: {{ $errors->hasAny(['valor_pago', 'data_pagamento', 'proposta_id', 'observacao']) ? 'true' : 'false' }} }"
         @open-add-pagamento-modal.window="showAddPagamentoModal = true"
     >
 
@@ -123,16 +123,16 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Valor Pago (R$)</label>
-                            <input type="number" step="0.01" name="valor_pago" required class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm focus:border-green-500">
+                            <input type="number" step="0.01" name="valor_pago" required value="{{ old('valor_pago') }}" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm focus:border-green-500">
                         </div>
                         <div>
                             <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Data</label>
-                            <input type="date" name="data_pagamento" required value="{{ date('Y-m-d') }}" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm">
+                            <input type="date" name="data_pagamento" required value="{{ old('data_pagamento', date('Y-m-d')) }}" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm">
                         </div>
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Descrição / Observação</label>
-                        <input type="text" name="observacao" placeholder="Ex: Adiantamento, Parcela 01..." class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm">
+                        <input type="text" name="observacao" placeholder="Ex: Adiantamento, Parcela 01..." value="{{ old('observacao') }}" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm">
                     </div>
                     <button type="submit" class="w-full py-4 bg-green-600 hover:bg-green-500 text-white font-black rounded-xl transition-all shadow-lg shadow-green-600/20 uppercase tracking-widest text-xs mt-2">
                         Confirmar Recebimento

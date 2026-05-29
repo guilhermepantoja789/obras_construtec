@@ -71,7 +71,7 @@
 
     <x-slot name="modals">
         <!-- Modal Nova Nota (Clean & Reliable) -->
-        <x-modal name="add-nota-modal" :show="false">
+        <x-modal name="add-nota-modal" :show="$errors->hasAny(['numero_nota', 'descricao', 'valor', 'data_recebimento', 'quem_recebeu', 'arquivo', 'observacao'])">
             <div class="bg-slate-900 min-h-[300px]">
                 <div class="p-6 sm:p-10">
                     <div class="flex items-start justify-between mb-8 gap-4">
@@ -94,27 +94,27 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div class="space-y-2">
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Número da Nota</label>
-                                <input type="text" name="numero_nota" required class="w-full bg-slate-800/50 border-white/10 rounded-2xl text-white text-sm focus:border-indigo-500 focus:ring-0 py-3.5 sm:py-4 px-5">
+                                <input type="text" name="numero_nota" required value="{{ old('numero_nota') }}" class="w-full bg-slate-800/50 border-white/10 rounded-2xl text-white text-sm focus:border-indigo-500 focus:ring-0 py-3.5 sm:py-4 px-5">
                             </div>
      
                             <div class="space-y-2">
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Valor Total (R$)</label>
-                                <input type="number" step="0.01" name="valor" required class="w-full bg-slate-800/50 border-white/10 rounded-2xl text-white text-sm focus:border-indigo-500 focus:ring-0 py-3.5 sm:py-4 px-5">
+                                <input type="number" step="0.01" name="valor" required value="{{ old('valor') }}" class="w-full bg-slate-800/50 border-white/10 rounded-2xl text-white text-sm focus:border-indigo-500 focus:ring-0 py-3.5 sm:py-4 px-5">
                             </div>
      
                             <div class="sm:col-span-2 space-y-2">
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Descrição</label>
-                                <input type="text" name="descricao" required class="w-full bg-slate-800/50 border-white/10 rounded-2xl text-white text-sm focus:border-indigo-500 focus:ring-0 py-3.5 sm:py-4 px-5">
+                                <input type="text" name="descricao" required value="{{ old('descricao') }}" class="w-full bg-slate-800/50 border-white/10 rounded-2xl text-white text-sm focus:border-indigo-500 focus:ring-0 py-3.5 sm:py-4 px-5">
                             </div>
      
                             <div class="space-y-2">
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Data</label>
-                                <input type="date" name="data_recebimento" required value="{{ date('Y-m-d') }}" class="w-full bg-slate-800/50 border-white/10 rounded-2xl text-white text-sm focus:border-indigo-500 focus:ring-0 py-3.5 sm:py-4 px-5">
+                                <input type="date" name="data_recebimento" required value="{{ old('data_recebimento', date('Y-m-d')) }}" class="w-full bg-slate-800/50 border-white/10 rounded-2xl text-white text-sm focus:border-indigo-500 focus:ring-0 py-3.5 sm:py-4 px-5">
                             </div>
      
                             <div class="space-y-2">
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Recebedor</label>
-                                <input type="text" name="quem_recebeu" required class="w-full bg-slate-800/50 border-white/10 rounded-2xl text-white text-sm focus:border-indigo-500 focus:ring-0 py-3.5 sm:py-4 px-5">
+                                <input type="text" name="quem_recebeu" required value="{{ old('quem_recebeu') }}" class="w-full bg-slate-800/50 border-white/10 rounded-2xl text-white text-sm focus:border-indigo-500 focus:ring-0 py-3.5 sm:py-4 px-5">
                             </div>
 
                             <div class="sm:col-span-2 space-y-2">
@@ -126,7 +126,7 @@
 
                             <div class="sm:col-span-2 space-y-2">
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Observações</label>
-                                <textarea name="observacao" rows="3" class="w-full bg-slate-800/50 border-white/10 rounded-2xl text-white text-sm focus:border-indigo-500 focus:ring-0 p-5"></textarea>
+                                <textarea name="observacao" rows="3" class="w-full bg-slate-800/50 border-white/10 rounded-2xl text-white text-sm focus:border-indigo-500 focus:ring-0 p-5">{{ old('observacao') }}</textarea>
                             </div>
                         </div>
 

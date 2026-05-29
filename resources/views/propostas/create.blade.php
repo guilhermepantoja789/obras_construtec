@@ -44,10 +44,8 @@
                     body: formData
                 });
 
-                if (!response.ok) throw new Error('Falha na importação');
-
                 const data = await response.json();
-                
+
                 if (!response.ok) {
                     throw new Error(data.error || 'Falha na importação');
                 }

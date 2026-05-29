@@ -52,6 +52,9 @@ class PropostaController extends Controller
         ]);
 
         $obraId = session('active_obra_id');
+        if (!$obraId) {
+            return redirect()->route('obras.index')->with('error', 'Selecione uma obra primeiro.');
+        }
 
         DB::transaction(function () use ($validated, $obraId) {
             $total = 0;
@@ -284,10 +287,17 @@ class PropostaController extends Controller
             return response()->json(['items' => $items]);
 
         } catch (\Exception $e) {
-            return response()->json([
+            \Log::error('Erro ao importar proposta: ' . $e->getMessage(), ['exception' => $e]);
+
+            $payload = [
                 'error' => 'Erro ao processar arquivo: ' . $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ], 500);
+            ];
+
+            if (config('app.debug')) {
+                $payload['trace'] = $e->getTraceAsString();
+            }
+
+            return response()->json($payload, 500);
         }
     }
 
