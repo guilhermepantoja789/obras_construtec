@@ -1,4 +1,4 @@
-const CACHE_NAME = 'diario-obras-v7';
+const CACHE_NAME = 'diario-obras-v8';
 const OFFLINE_URL = 'offline';
 const SYNC_TAG = 'sync-diario-posts';
 

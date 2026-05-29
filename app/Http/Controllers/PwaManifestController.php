@@ -8,9 +8,10 @@ class PwaManifestController extends Controller
 {
     public function __invoke(): JsonResponse
     {
-        $startUrl = rtrim(url('/'), '/').'/';
-        $scope = $startUrl;
-        $id = parse_url($startUrl, PHP_URL_PATH) ?: '/';
+        // Evita a URL raiz com barra final (/), que quebra no Apache em subdiretório (405)
+        $startUrl = route('dashboard', [], absolute: true);
+        $scope = rtrim(url('/'), '/').'/';
+        $id = parse_url($scope, PHP_URL_PATH) ?: '/';
 
         return response()->json([
             'id' => $id,
