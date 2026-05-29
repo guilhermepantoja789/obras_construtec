@@ -1,14 +1,13 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RootRedirectController;
 use App\Http\Controllers\PwaManifestController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/manifest.json', PwaManifestController::class)->name('pwa.manifest');
 
-Route::get('/', function () {
-    return redirect()->route('dashboard');
-});
+Route::match(['GET', 'HEAD'], '/', RootRedirectController::class)->name('root');
 
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
