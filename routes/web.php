@@ -1,7 +1,10 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PwaManifestController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/manifest.json', PwaManifestController::class)->name('pwa.manifest');
 
 Route::get('/', function () {
     return redirect()->route('dashboard');

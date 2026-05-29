@@ -1,9 +1,11 @@
-const CACHE_NAME = 'diario-obras-v6';
+const CACHE_NAME = 'diario-obras-v7';
 const OFFLINE_URL = 'offline';
 const SYNC_TAG = 'sync-diario-posts';
 
 // URLs relativas ao diretório do SW (compatível com deploy em subdiretório)
 const apiUrl = (path) => new URL(path, self.location).href;
+const appRootUrl = () => new URL('./', self.location.href).href;
+const isWithinAppScope = (url) => url.startsWith(appRootUrl());
 
 // ==========================================
 // INSTALL: Cache static assets + offline page
@@ -13,7 +15,7 @@ self.addEventListener('install', (event) => {
         caches.open(CACHE_NAME).then((cache) => {
             return cache.addAll([
                 OFFLINE_URL,
-                './',
+                appRootUrl(),
             ]);
         })
     );
@@ -51,11 +53,17 @@ self.addEventListener('message', (event) => {
 // FETCH: Serve from cache or network
 // ==========================================
 self.addEventListener('fetch', (event) => {
-    if (event.request.mode === 'navigate') {
-        event.respondWith(
-            fetch(event.request).catch(() => caches.match(OFFLINE_URL))
-        );
+    if (event.request.mode !== 'navigate') {
+        return;
     }
+
+    if (!isWithinAppScope(event.request.url)) {
+        return;
+    }
+
+    event.respondWith(
+        fetch(event.request).catch(() => caches.match(OFFLINE_URL))
+    );
 });
 
 // ==========================================
