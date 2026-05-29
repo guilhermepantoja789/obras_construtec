@@ -26,3 +26,6 @@ Homestead.yaml
 Thumbs.db
 deploy.txt
 deploy.zip
+deploy_diario_obras.txt
+backup_*.sql
+*.sql
