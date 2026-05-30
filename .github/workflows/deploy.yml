@@ -60,15 +60,20 @@ jobs:
           unzip -o deploy.zip
           rm deploy.zip
           rm -f bootstrap/cache/*.php
+          rm -f bootstrap/cache/routes-*.php
           php artisan optimize:clear
 
           php artisan config:cache
           php artisan event:cache
-          php artisan route:cache
+          php artisan route:clear
           php artisan view:cache
           php artisan migrate --force
           rm -rf public/storage
           cd public && ln -s ../storage/app/public storage && cd ..
           mkdir -p ~/public_html/construtec/
           ln -snf ~/diario_obras_core/public/ ~/public_html/construtec/diario_obras/
+          if [ -f ~/public_html/.htaccess ] && ! grep -q "construtec/diario_obras" ~/public_html/.htaccess; then
+            echo "WARNING: ~/public_html/.htaccess sem regra de exceção para construtec/diario_obras"
+            echo "Adicione regra para não redirecionar esse path para g2mhome/public."
+          fi
         EOF
