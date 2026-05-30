@@ -15,7 +15,13 @@
                     </a>
                 </div>
 
+                @php
+                    $obraCount = isset($availableObras) ? $availableObras->count() : 0;
+                    $showObrasMenu = !Auth::user()->isClient() || $obraCount > 1;
+                @endphp
+
                 <!-- Obra Selector -->
+                @if($showObrasMenu)
                 <div class="ml-4 flex items-center" x-data="{ search: '' }">
                     <x-dropdown align="left" width="64">
                         <x-slot name="trigger">
@@ -62,6 +68,7 @@
                         </x-slot>
                     </x-dropdown>
                 </div>
+                @endif
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-4 lg:space-x-8 sm:-my-px sm:ms-10 sm:flex">
@@ -69,9 +76,11 @@
                         {{ __('Dashboard') }}
                     </x-nav-link>
 
-                    <x-nav-link :href="route('obras.index')" :active="request()->routeIs('obras.*')" class="text-slate-400 hover:text-white border-transparent hover:border-amber-500 transition-all">
-                        {{ __('Obras') }}
-                    </x-nav-link>
+                    @if($showObrasMenu)
+                        <x-nav-link :href="route('obras.index')" :active="request()->routeIs('obras.*')" class="text-slate-400 hover:text-white border-transparent hover:border-amber-500 transition-all">
+                            {{ __('Obras') }}
+                        </x-nav-link>
+                    @endif
 
                     <x-nav-link :href="route('etapa-obras.index')" :active="request()->routeIs('etapa-obras.*')" class="text-slate-400 hover:text-white border-transparent hover:border-amber-500 transition-all">
                         {{ __('Cronograma') }}

@@ -3,6 +3,7 @@
 namespace App\View\Components;
 
 use App\Models\DiarioReport;
+use App\Models\Proposta;
 use App\Support\OrdemHelper;
 use Carbon\Carbon;
 use Illuminate\View\Component;
@@ -12,6 +13,7 @@ class AppLayout extends Component
 {
     public bool $diaEncerrado;
     public $etapas;
+    public ?int $clientePropostaId;
 
     public function __construct()
     {
@@ -30,6 +32,14 @@ class AppLayout extends Component
                     ->get()
             )
             : collect();
+
+        $this->clientePropostaId = null;
+        if ($obraId && auth()->check() && auth()->user()->isClient()) {
+            $this->clientePropostaId = Proposta::where('obra_id', $obraId)
+                ->where('status', 'aceita')
+                ->latest('data_proposta')
+                ->value('id');
+        }
     }
 
     public function render(): View

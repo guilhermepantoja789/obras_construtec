@@ -11,6 +11,7 @@ use App\Services\PropostaCalculoService;
 use App\Support\OrdemHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Reader\Csv;
 
@@ -190,6 +191,29 @@ class PropostaController extends Controller
         );
 
         return view('propostas.show', compact('proposta', 'items', 'grupos', 'encargosResumo'));
+    }
+
+    public function showCliente(Proposta $proposta)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            abort(403);
+        }
+
+        if (!$user->isChefe() && !$user->obras->contains($proposta->obra_id)) {
+            abort(403, 'Você não tem permissão para acessar esta proposta.');
+        }
+
+        // Cliente só visualiza propostas aceitas (sem rascunhos internos).
+        if ($user->isClient() && $proposta->status !== 'aceita') {
+            abort(403, 'Proposta ainda não disponível para visualização do cliente.');
+        }
+
+        $proposta->load('items');
+        $items = OrdemHelper::sortCollection($proposta->items);
+        $grupos = OrdemHelper::groupPropostaItems($items);
+
+        return view('propostas.show-client', compact('proposta', 'items', 'grupos'));
     }
 
     public function import(Request $request)

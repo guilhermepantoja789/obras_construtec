@@ -405,6 +405,15 @@
                             </div>
                             <span class="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Propostas</span>
                         </a>
+                        @elseif(Auth::user()->isClient())
+                        <a href="{{ $clientePropostaId ? route('propostas.cliente.show', $clientePropostaId) : '#' }}" class="flex flex-col items-center gap-2 group {{ !$clientePropostaId ? 'opacity-50 pointer-events-none' : '' }}">
+                            <div class="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500 border border-amber-500/20 group-active:scale-90 transition-transform">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Propostas</span>
+                        </a>
                         @endif
 
                         <!-- Diários (Histórico) -->
@@ -480,6 +489,10 @@
 
             <!-- Bottom Navigation (Mobile Only) -->
             <nav class="sm:hidden fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-xl border-t border-white/10 px-6 py-3 z-50 flex justify-between items-center safe-area-bottom">
+                @php
+                    $obraCountBottom = isset($availableObras) ? $availableObras->count() : 0;
+                    $showObrasMenuBottom = !Auth::user()->isClient() || $obraCountBottom > 1;
+                @endphp
                 <a href="{{ route('dashboard') }}" class="flex flex-col items-center gap-1 {{ request()->routeIs('dashboard') ? 'text-amber-500' : 'text-slate-400' }}">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
@@ -487,12 +500,14 @@
                     <span class="text-[10px] font-bold uppercase tracking-wider">Home</span>
                 </a>
 
-                <a href="{{ route('obras.index') }}" class="flex flex-col items-center gap-1 {{ request()->routeIs('obras.*') ? 'text-amber-500' : 'text-slate-400' }}">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                    </svg>
-                    <span class="text-[10px] font-bold uppercase tracking-wider">Obras</span>
-                </a>
+                @if($showObrasMenuBottom)
+                    <a href="{{ route('obras.index') }}" class="flex flex-col items-center gap-1 {{ request()->routeIs('obras.*') ? 'text-amber-500' : 'text-slate-400' }}">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Obras</span>
+                    </a>
+                @endif
 
                 <!-- Central Action Button Menu -->
                 @if(!Auth::user()->isClient())

@@ -115,7 +115,7 @@
         </div>
 
         <button type="button" @click="openNewItem()"
-            class="w-full py-4 border-2 border-dashed border-amber-500/30 rounded-2xl text-amber-500 font-black text-xs uppercase tracking-widest active:scale-[0.99]">
+            class="hidden lg:block w-full py-4 border-2 border-dashed border-amber-500/30 rounded-2xl text-amber-500 font-black text-xs uppercase tracking-widest active:scale-[0.99]">
             + Adicionar Item
         </button>
     </div>
@@ -216,6 +216,17 @@
             </template>
         </div>
     </div>
+
+    {{-- Ação fixa mobile: adicionar item (não desce com a lista) --}}
+    <button
+        type="button"
+        x-show="activeTab === 'itens'"
+        @click="openNewItem()"
+        class="lg:hidden fixed right-4 z-[115] h-12 px-4 rounded-full bg-amber-500 text-slate-900 font-black text-[10px] uppercase tracking-widest shadow-2xl active:scale-95"
+        style="bottom: calc(7.5rem + env(safe-area-inset-bottom)); display: none;"
+    >
+        + Item
+    </button>
 
     {{-- Barra inferior fixa --}}
     <div class="fixed bottom-0 left-0 right-0 z-[110] bg-slate-950/95 backdrop-blur-xl border-t border-white/10 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">

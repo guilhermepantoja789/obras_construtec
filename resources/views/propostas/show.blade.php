@@ -64,6 +64,36 @@
             </div>
         </div>
 
+        @php
+            $groupMeta = [];
+            $hideChildSubtotalById = [];
+            $etapaDisplaySubtotalById = [];
+
+            foreach ($grupos as $idx => $grupo) {
+                $etapa = $grupo['etapa'] ?? null;
+                $childrenSubtotal = collect($grupo['items'] ?? [])->sum('subtotal');
+                $hasOwnSubtotal = $etapa && ((float) $etapa->subtotal > 0.00001);
+                $displaySubtotal = $etapa
+                    ? ($hasOwnSubtotal ? (float) $etapa->subtotal : (float) $childrenSubtotal)
+                    : (float) $childrenSubtotal;
+
+                $groupMeta[$idx] = [
+                    'displaySubtotal' => $displaySubtotal,
+                    'hideChildrenSubtotal' => $hasOwnSubtotal,
+                ];
+
+                if ($etapa) {
+                    $etapaDisplaySubtotalById[$etapa->id] = $displaySubtotal;
+                }
+
+                if ($hasOwnSubtotal) {
+                    foreach (($grupo['items'] ?? []) as $child) {
+                        $hideChildSubtotalById[$child->id] = true;
+                    }
+                }
+            }
+        @endphp
+
         <!-- Itens -->
         <div class="space-y-3" x-data="{ searchQuery: '', showOnlyEtapas: false, groupByEtapa: true, collapsed: {} }">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 px-2">
@@ -91,6 +121,7 @@
                     @php
                         $etapa = $grupo['etapa'];
                         $ordemKey = $etapa ? (string) $etapa->ordem : 'sem-etapa-'.$loop->index;
+                        $meta = $groupMeta[$loop->index] ?? ['displaySubtotal' => 0, 'hideChildrenSubtotal' => false];
                     @endphp
                     <div class="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
                         @if($etapa)
@@ -112,7 +143,10 @@
                                 <div class="px-4 py-2 flex justify-between items-center"
                                     x-show="(!showOnlyEtapas || {{ $etapa->is_etapa ? 'true' : 'false' }}) && (searchQuery === '' || '{{ addslashes(strtolower($etapa->descricao.' '.$etapa->ordem)) }}'.includes(searchQuery.toLowerCase()))">
                                     <span class="text-xs font-bold {{ $etapa->is_etapa ? 'text-amber-500 uppercase' : 'text-white' }}">{{ $etapa->descricao }}</span>
-                                    <span class="text-xs font-black text-white">R$ {{ number_format($etapa->subtotal, 2, ',', '.') }}</span>
+                                    <span class="text-xs font-black text-white">
+                                        <span class="text-[9px] text-slate-500 uppercase mr-1">Valor total</span>
+                                        R$ {{ number_format($meta['displaySubtotal'], 2, ',', '.') }}
+                                    </span>
                                 </div>
                             @endif
                             @foreach($grupo['items'] as $item)
@@ -122,7 +156,13 @@
                                         <span class="text-[9px] font-black text-slate-600">{{ $item->ordem }}</span>
                                         <span class="text-xs text-white truncate">{{ $item->descricao }}</span>
                                     </div>
-                                    <span class="text-xs font-black text-white shrink-0 ml-2">R$ {{ number_format($item->subtotal, 2, ',', '.') }}</span>
+                                    <span class="text-xs font-black shrink-0 ml-2 {{ !empty($meta['hideChildrenSubtotal']) ? 'text-slate-600' : 'text-white' }}">
+                                        @if(!empty($meta['hideChildrenSubtotal']))
+                                            —
+                                        @else
+                                            R$ {{ number_format($item->subtotal, 2, ',', '.') }}
+                                        @endif
+                                    </span>
                                 </div>
                             @endforeach
                         </div>
@@ -144,6 +184,10 @@
                     </thead>
                     <tbody class="divide-y divide-white/5">
                         @foreach($items as $item)
+                            @php
+                                $hideSubtotal = !empty($hideChildSubtotalById[$item->id]);
+                                $displaySubtotal = $etapaDisplaySubtotalById[$item->id] ?? $item->subtotal;
+                            @endphp
                             <tr class="hover:bg-white/5 transition-colors {{ $item->is_etapa ? 'bg-white/[0.03]' : '' }}"
                                 x-show="(!showOnlyEtapas || {{ $item->is_etapa ? 'true' : 'false' }}) && (searchQuery === '' || '{{ addslashes(strtolower($item->descricao.' '.$item->ordem)) }}'.includes(searchQuery.toLowerCase()))">
                                 <td class="px-6 py-4 text-[10px] font-black text-slate-500">{{ $item->ordem }}</td>
@@ -152,7 +196,13 @@
                                 </td>
                                 <td class="px-6 py-4 text-[10px] text-slate-400 text-center">{{ $item->unidade ?: '-' }}</td>
                                 <td class="px-6 py-4 text-xs text-white text-center font-bold">{{ number_format($item->quantidade, 2, ',', '.') }}</td>
-                                <td class="px-6 py-4 text-xs font-black text-white text-right">R$ {{ number_format($item->subtotal, 2, ',', '.') }}</td>
+                                <td class="px-6 py-4 text-xs font-black text-right {{ $hideSubtotal ? 'text-slate-600' : 'text-white' }}">
+                                    @if($hideSubtotal)
+                                        —
+                                    @else
+                                        R$ {{ number_format($displaySubtotal, 2, ',', '.') }}
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>

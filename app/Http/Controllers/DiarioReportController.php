@@ -12,6 +12,22 @@ use Illuminate\Support\Facades\Auth;
 
 class DiarioReportController extends Controller
 {
+    private function authorizeReportAccess(DiarioReport $diarioReport): void
+    {
+        $user = Auth::user();
+        if (!$user) {
+            abort(403);
+        }
+
+        if ($user->isChefe()) {
+            return;
+        }
+
+        if (!$user->obras->contains($diarioReport->obra_id)) {
+            abort(403, 'Você não tem permissão para acessar este relatório.');
+        }
+    }
+
     public function index(Request $request)
     {
         $obraId = session('active_obra_id');
@@ -111,6 +127,7 @@ class DiarioReportController extends Controller
 
     public function show(DiarioReport $diarioReport)
     {
+        $this->authorizeReportAccess($diarioReport);
         $obra = $diarioReport->obra;
         
         // Calculations
@@ -186,6 +203,7 @@ class DiarioReportController extends Controller
 
     public function downloadPdf(DiarioReport $diarioReport)
     {
+        $this->authorizeReportAccess($diarioReport);
         $obra = $diarioReport->obra;
 
         $hoje = $diarioReport->data_relatorio;

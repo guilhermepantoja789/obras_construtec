@@ -32,11 +32,14 @@ Route::middleware('auth')->group(function () {
     Route::get('diario-reports', [\App\Http\Controllers\DiarioReportController::class, 'index'])->name('diario-reports.index');
     Route::get('diario-reports/{diarioReport}', [\App\Http\Controllers\DiarioReportController::class, 'show'])->name('diario-reports.show');
     Route::get('diario-reports/{diarioReport}/pdf', [\App\Http\Controllers\DiarioReportController::class, 'downloadPdf'])->name('diario-reports.pdf');
+    Route::get('propostas/{proposta}/cliente', [\App\Http\Controllers\PropostaController::class, 'showCliente'])
+        ->middleware('role:chefe,cliente')
+        ->name('propostas.cliente.show');
     Route::get('etapa-obras', [\App\Http\Controllers\EtapaObraController::class, 'index'])->name('etapa-obras.index');
 
     // Chefe Only
     Route::middleware('role:chefe')->group(function () {
-        Route::resource('users', \App\Http\Controllers\UserController::class);
+        Route::resource('users', \App\Http\Controllers\UserController::class)->except(['show']);
         Route::resource('propostas', \App\Http\Controllers\PropostaController::class);
         Route::post('propostas/import', [\App\Http\Controllers\PropostaController::class, 'import'])->name('propostas.import');
         Route::get('financeiro', [\App\Http\Controllers\EtapaObraController::class, 'financeiro'])->name('financeiro.index');
