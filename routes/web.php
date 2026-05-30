@@ -46,6 +46,8 @@ Route::middleware('auth')->group(function () {
         Route::put('obras/{obra}/contrato', [\App\Http\Controllers\ContratoController::class, 'update'])->name('contrato.update');
         Route::get('obras/{obra}/contrato/pdf', [\App\Http\Controllers\ContratoController::class, 'pdf'])->name('contrato.pdf');
         Route::resource('etapa-obras', \App\Http\Controllers\EtapaObraController::class)->except(['index']);
+        Route::post('etapa-obras/reorder', [\App\Http\Controllers\EtapaObraController::class, 'reorder'])->name('etapa-obras.reorder');
+        Route::post('etapa-obras/regenerar', [\App\Http\Controllers\EtapaObraController::class, 'regenerarFromProposta'])->name('etapa-obras.regenerar');
         Route::get('diario-reports/{diarioReport}/edit', [\App\Http\Controllers\DiarioReportController::class, 'edit'])->name('diario-reports.edit');
         Route::put('diario-reports/{diarioReport}', [\App\Http\Controllers\DiarioReportController::class, 'update'])->name('diario-reports.update');
         Route::post('diario-reports/{diarioReport}/photos', [\App\Http\Controllers\DiarioReportController::class, 'addPhoto'])->name('diario-reports.add-photo');

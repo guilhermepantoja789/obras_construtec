@@ -17,8 +17,20 @@ class PropostaItem extends Model
         'ordem',
     ];
 
+    protected $casts = [
+        'is_etapa' => 'boolean',
+        'quantidade' => 'decimal:3',
+        'valor_unitario' => 'decimal:2',
+        'subtotal' => 'decimal:2',
+    ];
+
     public function proposta()
     {
         return $this->belongsTo(Proposta::class);
+    }
+
+    public function etapaObra()
+    {
+        return $this->hasOne(EtapaObra::class);
     }
 }

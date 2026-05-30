@@ -3,6 +3,7 @@
 namespace App\View\Components;
 
 use App\Models\DiarioReport;
+use App\Support\OrdemHelper;
 use Carbon\Carbon;
 use Illuminate\View\Component;
 use Illuminate\View\View;
@@ -23,10 +24,11 @@ class AppLayout extends Component
             : false;
 
         $this->etapas = $obraId
-            ? \App\Models\EtapaObra::where('obra_id', $obraId)
-                ->where('status', '!=', 'concluida')
-                ->orderBy('ordem')
-                ->get()
+            ? OrdemHelper::sortCollection(
+                \App\Models\EtapaObra::where('obra_id', $obraId)
+                    ->where('status', '!=', 'concluida')
+                    ->get()
+            )
             : collect();
     }
 

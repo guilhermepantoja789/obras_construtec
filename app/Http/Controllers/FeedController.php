@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Obra;
 use App\Models\DiarioPost;
 use App\Models\DiarioReport;
+use App\Support\OrdemHelper;
 use Illuminate\Http\Request;
 
 class FeedController extends Controller
@@ -24,10 +25,11 @@ class FeedController extends Controller
             ->latest('data_postagem')
             ->get();
 
-        $etapas = \App\Models\EtapaObra::where('obra_id', $obraId)
-            ->where('status', '!=', 'concluida')
-            ->orderBy('ordem')
-            ->get();
+        $etapas = OrdemHelper::sortCollection(
+            \App\Models\EtapaObra::where('obra_id', $obraId)
+                ->where('status', '!=', 'concluida')
+                ->get()
+        );
 
         $report = DiarioReport::where('obra_id', $obraId)
             ->whereDate('data_relatorio', \Carbon\Carbon::today())

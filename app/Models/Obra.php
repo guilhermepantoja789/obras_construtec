@@ -23,11 +23,13 @@ class Obra extends Model
         'cnpj_empresa_contratada',
         'engenheiro_responsavel',
         'prazo_dias',
+        'encargos_padrao',
     ];
 
     protected $casts = [
         'data_inicio' => 'date',
         'data_fim_prevista' => 'date',
+        'encargos_padrao' => 'array',
     ];
 
     public function users()
