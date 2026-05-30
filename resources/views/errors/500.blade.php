@@ -4,17 +4,21 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Erro interno</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; font-family: system-ui, sans-serif; background: #020617; color: #fff; }
+        .card { width: 100%; max-width: 28rem; padding: 2rem; text-align: center; border-radius: 1.5rem; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05); }
+        .label { font-size: .75rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #f59e0b; margin-bottom: .5rem; }
+        h1 { font-size: 1.5rem; font-weight: 800; margin: 0 0 .75rem; }
+        p { font-size: .875rem; color: #cbd5e1; margin: 0 0 1.5rem; }
+        a { display: inline-flex; width: 100%; align-items: center; justify-content: center; padding: .75rem; border-radius: .75rem; background: #f59e0b; color: #020617; font-weight: 800; font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; text-decoration: none; }
+    </style>
 </head>
-<body class="min-h-screen bg-slate-950 text-white flex items-center justify-center px-4">
-    <div class="w-full max-w-md bg-white/5 border border-white/10 rounded-3xl p-8 text-center">
-        <p class="text-xs font-black text-amber-500 uppercase tracking-widest mb-2">Erro 500</p>
-        <h1 class="text-2xl font-black mb-3">Falha temporária</h1>
-        <p class="text-sm text-slate-300 mb-6">Ocorreu um erro inesperado. Tente novamente em alguns instantes.</p>
-
-        <a href="{{ route('dashboard') }}" class="inline-flex w-full items-center justify-center py-3 rounded-xl bg-amber-500 text-slate-900 font-black text-xs uppercase tracking-widest">
-            Ir para o painel
-        </a>
+<body>
+    <div class="card">
+        <p class="label">Erro 500</p>
+        <h1>Falha temporária</h1>
+        <p>Ocorreu um erro inesperado. Tente novamente em alguns instantes.</p>
+        <a href="/login">Ir para o login</a>
     </div>
 </body>
 </html>

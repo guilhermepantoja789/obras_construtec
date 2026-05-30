@@ -1,4 +1,4 @@
-const CACHE_NAME = 'diario-obras-v8';
+const CACHE_NAME = 'diario-obras-v9';
 const OFFLINE_URL = 'offline';
 const SYNC_TAG = 'sync-diario-posts';
 
@@ -13,10 +13,7 @@ const isWithinAppScope = (url) => url.startsWith(appRootUrl());
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll([
-                OFFLINE_URL,
-                appRootUrl(),
-            ]);
+            return cache.add(OFFLINE_URL);
         })
     );
     self.skipWaiting();

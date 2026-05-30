@@ -4,6 +4,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -68,7 +70,38 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
+            // Deixar o Laravel redirecionar convidados ao login, validação, etc.
+            if ($e instanceof AuthenticationException || $e instanceof ValidationException) {
+                return null;
+            }
+
             if (app()->isProduction()) {
+                $context = [
+                    'message' => $e->getMessage(),
+                    'exception' => $e,
+                    'url' => $request->fullUrl(),
+                    'method' => $request->method(),
+                    'user_id' => $request->user()?->id,
+                ];
+
+                \Log::error('Erro não tratado em produção', $context);
+
+                // Arquivo simples para diagnóstico no servidor: cat storage/logs/last-error.log
+                @file_put_contents(
+                    storage_path('logs/last-error.log'),
+                    sprintf(
+                        "[%s] %s %s | user=%s | %s | %s:%d\n",
+                        now()->toDateTimeString(),
+                        $request->method(),
+                        $request->fullUrl(),
+                        $request->user()?->id ?? 'guest',
+                        $e->getMessage(),
+                        $e->getFile(),
+                        $e->getLine()
+                    ),
+                    LOCK_EX
+                );
+
                 return response()->view('errors.500', [], 500);
             }
 

@@ -8,6 +8,10 @@ class RootRedirectController extends Controller
 {
     public function __invoke(): RedirectResponse
     {
-        return redirect()->route('dashboard');
+        if (auth()->check()) {
+            return redirect()->route('dashboard');
+        }
+
+        return redirect()->route('login');
     }
 }

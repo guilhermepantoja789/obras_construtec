@@ -9,7 +9,9 @@ class PwaManifestController extends Controller
     public function __invoke(): JsonResponse
     {
         // Evita a URL raiz com barra final (/), que quebra no Apache em subdiretório (405)
-        $startUrl = route('dashboard', [], absolute: true);
+        $startUrl = auth()->check()
+            ? route('dashboard', [], absolute: true)
+            : route('login', [], absolute: true);
         $scope = rtrim(url('/'), '/').'/';
         $id = parse_url($scope, PHP_URL_PATH) ?: '/';
 
