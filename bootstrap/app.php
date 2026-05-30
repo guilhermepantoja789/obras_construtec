@@ -43,18 +43,6 @@ return Application::configure(basePath: dirname(__DIR__))
             return null;
         });
 
-        $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request) {
-            if ($request->expectsJson()) {
-                return null;
-            }
-
-            if (app()->isProduction()) {
-                return response()->view('errors.500', [], 500);
-            }
-
-            return null;
-        });
-
         $exceptions->render(function (\Illuminate\Database\QueryException $e, \Illuminate\Http\Request $request) {
             if ($request->expectsJson()) {
                 return null;
@@ -73,5 +61,17 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return redirect()->back()->withInput()->with('error', $userMessage);
+        });
+
+        $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request) {
+            if ($request->expectsJson()) {
+                return null;
+            }
+
+            if (app()->isProduction()) {
+                return response()->view('errors.500', [], 500);
+            }
+
+            return null;
         });
     })->create();

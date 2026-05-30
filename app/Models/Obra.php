@@ -29,6 +29,7 @@ class Obra extends Model
     protected $casts = [
         'data_inicio' => 'date',
         'data_fim_prevista' => 'date',
+        'prazo_dias' => 'integer',
         'encargos_padrao' => 'array',
     ];
 

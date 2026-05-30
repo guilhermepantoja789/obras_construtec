@@ -30,28 +30,7 @@ class ObraController extends Controller
 
     public function store(Request $request)
     {
-        $request->merge($this->normalizeObraRequest($request));
-
-        $validated = $request->validate([
-            'nome' => 'required|string|max:255',
-            'localizacao' => 'nullable|string|max:255',
-            'cep' => 'nullable|string|max:9',
-            'logradouro' => 'nullable|string|max:255',
-            'bairro' => 'nullable|string|max:255',
-            'cidade' => 'nullable|string|max:255',
-            'estado' => 'nullable|string|max:2',
-            'data_inicio' => 'nullable|date',
-            'data_fim_prevista' => 'nullable|date|after_or_equal:data_inicio',
-            'status' => 'required|string',
-            'contratante' => 'nullable|string',
-            'cnpj_contratante' => 'nullable|string|max:18',
-            'empresa_contratada' => 'nullable|string',
-            'cnpj_empresa_contratada' => 'nullable|string|max:18',
-            'engenheiro_responsavel' => 'nullable|string',
-            'prazo_dias' => 'nullable|integer|min:0',
-        ], [
-            'data_fim_prevista.after_or_equal' => 'A previsão de término deve ser igual ou posterior à data de início.',
-        ]);
+        $validated = $this->validateObra($request);
 
         Obra::create($this->prepareObraData($validated));
 
@@ -79,9 +58,23 @@ class ObraController extends Controller
 
     public function update(Request $request, Obra $obra)
     {
+        $validated = $this->validateObra($request);
+
+        $obra->update($this->prepareObraData($validated));
+
+        return redirect()->route('obras.index')->with('success', 'Obra atualizada com sucesso!');
+    }
+
+    private function validateObra(Request $request): array
+    {
         $request->merge($this->normalizeObraRequest($request));
 
-        $validated = $request->validate([
+        return $request->validate($this->obraRules(), $this->obraMessages());
+    }
+
+    private function obraRules(): array
+    {
+        return [
             'nome' => 'required|string|max:255',
             'localizacao' => 'nullable|string|max:255',
             'cep' => 'nullable|string|max:9',
@@ -98,13 +91,14 @@ class ObraController extends Controller
             'cnpj_empresa_contratada' => 'nullable|string|max:18',
             'engenheiro_responsavel' => 'nullable|string',
             'prazo_dias' => 'nullable|integer|min:0',
-        ], [
+        ];
+    }
+
+    private function obraMessages(): array
+    {
+        return [
             'data_fim_prevista.after_or_equal' => 'A previsão de término deve ser igual ou posterior à data de início.',
-        ]);
-
-        $obra->update($this->prepareObraData($validated));
-
-        return redirect()->route('obras.index')->with('success', 'Obra atualizada com sucesso!');
+        ];
     }
 
     private function normalizeObraRequest(Request $request): array
@@ -125,21 +119,24 @@ class ObraController extends Controller
     private function prepareObraData(array $validated): array
     {
         foreach (['data_inicio', 'data_fim_prevista'] as $field) {
-            if (empty($validated[$field])) {
+            if (empty($validated[$field] ?? null)) {
                 $validated[$field] = null;
             }
         }
 
-        if ($validated['prazo_dias'] === null) {
+        $prazo = $validated['prazo_dias'] ?? null;
+
+        if ($prazo === null || $prazo === '') {
             if (! empty($validated['data_inicio']) && ! empty($validated['data_fim_prevista'])) {
-                $validated['prazo_dias'] = Carbon::parse($validated['data_inicio'])
-                    ->diffInDays(Carbon::parse($validated['data_fim_prevista']));
+                $prazo = (int) Carbon::parse($validated['data_inicio'])
+                    ->startOfDay()
+                    ->diffInDays(Carbon::parse($validated['data_fim_prevista'])->startOfDay());
+            } else {
+                $prazo = 0;
             }
         }
 
-        if ($validated['prazo_dias'] === null) {
-            $validated['prazo_dias'] = 0;
-        }
+        $validated['prazo_dias'] = max(0, (int) $prazo);
 
         return $validated;
     }
