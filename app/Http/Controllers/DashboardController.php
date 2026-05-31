@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Obra;
+use App\Models\DespesaObra;
 use App\Models\DiarioPost;
 use App\Models\EtapaObra;
 use App\Models\User;
@@ -37,9 +38,13 @@ class DashboardController extends Controller
 
         // Financeiro simplificado
         $proposta = $obra->propostas->where('status', 'aceita')->first() ?? $obra->propostas->first();
+        $valorRecebido = $proposta ? $proposta->pagamentos()->sum('valor_pago') : 0;
+        $valorGasto = DespesaObra::where('obra_id', $obraId)->where('status', 'pago')->sum('valor');
         $financeiro = [
             'valor_total' => $proposta ? $proposta->valor_total : 0,
-            'valor_pago' => $proposta ? $proposta->pagamentos()->sum('valor_pago') : 0,
+            'valor_pago' => $valorRecebido,
+            'valor_gasto' => $valorGasto,
+            'saldo_operacional' => $valorRecebido - $valorGasto,
         ];
         $financeiro['saldo_devedor'] = $financeiro['valor_total'] - $financeiro['valor_pago'];
         $financeiro['percentual_pago'] = $financeiro['valor_total'] > 0 

@@ -71,15 +71,24 @@
                     <a href="{{ route('financeiro.index') }}" class="text-[10px] font-bold text-amber-500 uppercase tracking-widest hover:underline">Detalhes</a>
                 </div>
                 
-                <div class="flex items-center gap-4 mb-6">
-                    <div class="flex-1">
-                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Pago até agora</p>
-                        <p class="text-lg font-black text-white">R$ {{ number_format($financeiro['valor_pago'], 2, ',', '.') }}</p>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Recebido</p>
+                        <p class="text-lg font-black text-green-500">R$ {{ number_format($financeiro['valor_pago'], 2, ',', '.') }}</p>
                     </div>
-                    <div class="w-px h-10 bg-white/10"></div>
-                    <div class="flex-1 text-right">
+                    <div class="text-right">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Gasto</p>
+                        <p class="text-lg font-black text-rose-500">R$ {{ number_format($financeiro['valor_gasto'], 2, ',', '.') }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Saldo Operacional</p>
+                        <p class="text-lg font-black {{ $financeiro['saldo_operacional'] >= 0 ? 'text-emerald-400' : 'text-rose-400' }}">
+                            R$ {{ number_format($financeiro['saldo_operacional'], 2, ',', '.') }}
+                        </p>
+                    </div>
+                    <div class="text-right">
                         <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Saldo Devedor</p>
-                        <p class="text-lg font-black text-rose-500">R$ {{ number_format($financeiro['saldo_devedor'], 2, ',', '.') }}</p>
+                        <p class="text-lg font-black text-amber-500">R$ {{ number_format($financeiro['saldo_devedor'], 2, ',', '.') }}</p>
                     </div>
                 </div>
 

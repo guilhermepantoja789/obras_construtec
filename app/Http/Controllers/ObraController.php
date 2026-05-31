@@ -39,7 +39,9 @@ class ObraController extends Controller
 
     public function show(Obra $obra)
     {
-        if (!auth()->user()->isChefe() && !auth()->user()->obras->contains($obra->id)) {
+        $user = auth()->user();
+
+        if (!$user->isChefe() && !$user->obras()->whereKey($obra->id)->exists()) {
             abort(403);
         }
 

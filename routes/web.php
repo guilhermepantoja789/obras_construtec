@@ -16,8 +16,16 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::resource('obras', \App\Http\Controllers\ObraController::class)
-        ->middleware('role:chefe', ['only' => ['create', 'store', 'edit', 'update', 'destroy']]);
+    Route::get('obras', [\App\Http\Controllers\ObraController::class, 'index'])->name('obras.index');
+    Route::get('obras/{obra}', [\App\Http\Controllers\ObraController::class, 'show'])->name('obras.show');
+
+    Route::middleware('role:chefe')->group(function () {
+        Route::get('obras/create', [\App\Http\Controllers\ObraController::class, 'create'])->name('obras.create');
+        Route::post('obras', [\App\Http\Controllers\ObraController::class, 'store'])->name('obras.store');
+        Route::get('obras/{obra}/edit', [\App\Http\Controllers\ObraController::class, 'edit'])->name('obras.edit');
+        Route::match(['put', 'patch'], 'obras/{obra}', [\App\Http\Controllers\ObraController::class, 'update'])->name('obras.update');
+        Route::delete('obras/{obra}', [\App\Http\Controllers\ObraController::class, 'destroy'])->name('obras.destroy');
+    });
 
     // Public/All roles (View only or basic access)
     Route::get('/feed', [\App\Http\Controllers\FeedController::class, 'index'])->name('feed.index');
@@ -42,9 +50,13 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', \App\Http\Controllers\UserController::class)->except(['show']);
         Route::resource('propostas', \App\Http\Controllers\PropostaController::class);
         Route::post('propostas/import', [\App\Http\Controllers\PropostaController::class, 'import'])->name('propostas.import');
-        Route::get('financeiro', [\App\Http\Controllers\EtapaObraController::class, 'financeiro'])->name('financeiro.index');
-        Route::post('pagamentos', [\App\Http\Controllers\EtapaObraController::class, 'storePagamento'])->name('pagamentos.store');
-        Route::delete('pagamentos/{pagamento}', [\App\Http\Controllers\EtapaObraController::class, 'destroyPagamento'])->name('pagamentos.destroy');
+        Route::get('financeiro', [\App\Http\Controllers\FinanceiroController::class, 'index'])->name('financeiro.index');
+        Route::post('pagamentos', [\App\Http\Controllers\FinanceiroController::class, 'storePagamento'])->name('pagamentos.store');
+        Route::get('pagamentos/{pagamento}/comprovante', [\App\Http\Controllers\FinanceiroController::class, 'comprovantePagamento'])->name('pagamentos.comprovante');
+        Route::delete('pagamentos/{pagamento}', [\App\Http\Controllers\FinanceiroController::class, 'destroyPagamento'])->name('pagamentos.destroy');
+        Route::post('despesas', [\App\Http\Controllers\FinanceiroController::class, 'storeDespesa'])->name('despesas.store');
+        Route::get('despesas/{despesaObra}/comprovante', [\App\Http\Controllers\FinanceiroController::class, 'comprovanteDespesa'])->name('despesas.comprovante');
+        Route::delete('despesas/{despesaObra}', [\App\Http\Controllers\FinanceiroController::class, 'destroyDespesa'])->name('despesas.destroy');
         Route::get('obras/{obra}/contrato', [\App\Http\Controllers\ContratoController::class, 'edit'])->name('contrato.edit');
         Route::put('obras/{obra}/contrato', [\App\Http\Controllers\ContratoController::class, 'update'])->name('contrato.update');
         Route::get('obras/{obra}/contrato/pdf', [\App\Http\Controllers\ContratoController::class, 'pdf'])->name('contrato.pdf');

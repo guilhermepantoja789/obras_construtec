@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\EtapaObra;
 use App\Models\Obra;
-use App\Models\Pagamento;
 use App\Models\Proposta;
 use App\Services\EtapaObraSyncService;
 use App\Support\OrdemHelper;
@@ -33,40 +32,6 @@ class EtapaObraController extends Controller
             ->first();
 
         return view('etapa-obras.index', compact('obra', 'etapas', 'grupos', 'progressoGeral', 'propostaAceita'));
-    }
-
-    public function financeiro()
-    {
-        $obraId = session('active_obra_id');
-        if (!$obraId) return redirect()->route('obras.index');
-
-        $obra = Obra::with('propostas')->findOrFail($obraId);
-        $proposta = $obra->propostas->where('status', 'aceita')->first()
-                    ?? $obra->propostas->first();
-
-        $pagamentos = $proposta ? $proposta->pagamentos()->orderBy('data_pagamento', 'desc')->get() : collect();
-
-        return view('financeiro.index', compact('obra', 'proposta', 'pagamentos'));
-    }
-
-    public function storePagamento(Request $request)
-    {
-        $validated = $request->validate([
-            'proposta_id' => 'required|exists:propostas,id',
-            'valor_pago' => 'required|numeric|min:0',
-            'data_pagamento' => 'required|date',
-            'observacao' => 'nullable|string',
-        ]);
-
-        Pagamento::create($validated);
-
-        return back()->with('success', 'Pagamento registrado!');
-    }
-
-    public function destroyPagamento(Pagamento $pagamento)
-    {
-        $pagamento->delete();
-        return back()->with('success', 'Pagamento removido.');
     }
 
     public function store(Request $request)

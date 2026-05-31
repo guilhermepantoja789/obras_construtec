@@ -11,6 +11,7 @@ class Pagamento extends Model
         'valor_pago',
         'data_pagamento',
         'comprovante_path',
+        'forma_pagamento',
         'observacao',
     ];
 
