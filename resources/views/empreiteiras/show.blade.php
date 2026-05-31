@@ -133,10 +133,27 @@
                                     · {{ $despesa->status === 'pago' ? 'Pago' : 'Pendente' }}
                                 </p>
                             </div>
-                            <div class="text-right shrink-0">
+                            <div class="text-right shrink-0 flex flex-col items-end gap-1">
                                 <p class="text-white font-black text-sm">R$ {{ number_format($despesa->valor, 2, ',', '.') }}</p>
-                                @if($despesa->comprovante_path)
-                                    <a href="{{ route('despesas.comprovante', $despesa) }}" class="text-[8px] font-bold text-orange-400 uppercase tracking-widest hover:text-orange-300">Comprovante</a>
+                                @foreach($despesa->anexos as $index => $anexo)
+                                    <x-anexo-viewer-button
+                                        :url="route('despesas.anexo', [$despesa, $anexo])"
+                                        :file-name="$anexo->nome_original ?: basename($anexo->path)"
+                                        title="Comprovante — {{ $despesa->descricao }}"
+                                        :text="$empreiteira->nome"
+                                        :label="$despesa->anexos->count() > 1 ? 'Anexo ' . ($index + 1) : 'Comprovante'"
+                                        class="!px-0 !py-0 !bg-transparent hover:!bg-transparent text-[8px] font-bold text-orange-400 uppercase tracking-widest hover:text-orange-300"
+                                    />
+                                @endforeach
+                                @if($despesa->anexos->isEmpty() && $despesa->comprovante_path)
+                                    <x-anexo-viewer-button
+                                        :url="route('despesas.comprovante', $despesa)"
+                                        :file-name="basename($despesa->comprovante_path)"
+                                        title="Comprovante — {{ $despesa->descricao }}"
+                                        :text="$empreiteira->nome"
+                                        label="Comprovante"
+                                        class="!px-0 !py-0 !bg-transparent hover:!bg-transparent text-[8px] font-bold text-orange-400 uppercase tracking-widest hover:text-orange-300"
+                                    />
                                 @endif
                             </div>
                         </div>

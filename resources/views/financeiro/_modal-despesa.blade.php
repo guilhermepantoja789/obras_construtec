@@ -71,6 +71,7 @@
                             <option value="mao_de_obra" @selected(old('categoria') === 'mao_de_obra')>Mão de obra</option>
                             <option value="equipamento" @selected(old('categoria') === 'equipamento')>Equipamento</option>
                             <option value="servico" @selected(old('categoria') === 'servico')>Serviço</option>
+                            <option value="retirada" @selected(old('categoria') === 'retirada')>Retirada</option>
                             <option value="outros" @selected(old('categoria') === 'outros')>Outros</option>
                         </select>
                     </div>
@@ -100,19 +101,51 @@
                     <textarea name="observacao" rows="2" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm py-3 px-4">{{ old('observacao') }}</textarea>
                 </div>
 
-                <div x-data="{ preview: null }">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Comprovante</label>
+                <div x-data="{ previews: [] }">
+                    <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Comprovantes</label>
                     <label class="relative flex flex-col items-center justify-center w-full min-h-[120px] border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:border-rose-500/40 transition-all overflow-hidden">
-                        <template x-if="preview">
-                            <img :src="preview" class="absolute inset-0 w-full h-full object-cover opacity-60">
-                        </template>
                         <div class="relative z-10 flex flex-col items-center py-4 px-4 text-center">
                             <svg class="w-8 h-8 text-slate-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Toque para anexar foto ou PDF</span>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Toque para anexar fotos ou PDFs</span>
+                            <span class="text-[9px] text-slate-600 mt-1">Até 10 arquivos</span>
                         </div>
-                        <input type="file" name="comprovante" accept="image/*,application/pdf" class="absolute inset-0 opacity-0 cursor-pointer"
-                            @change="const f = $event.target.files[0]; if (f && f.type.startsWith('image/')) { const r = new FileReader(); r.onload = e => preview = e.target.result; r.readAsDataURL(f); } else { preview = null; }">
+                        <input
+                            type="file"
+                            name="comprovantes[]"
+                            accept="image/*,application/pdf"
+                            multiple
+                            class="absolute inset-0 opacity-0 cursor-pointer"
+                            @change="
+                                previews = [];
+                                Array.from($event.target.files || []).forEach(f => {
+                                    if (f.type.startsWith('image/')) {
+                                        const r = new FileReader();
+                                        r.onload = e => previews.push({ name: f.name, src: e.target.result });
+                                        r.readAsDataURL(f);
+                                    } else {
+                                        previews.push({ name: f.name, src: null });
+                                    }
+                                });
+                            "
+                        >
                     </label>
+                    <template x-if="previews.length > 0">
+                        <div class="mt-3 space-y-2">
+                            <template x-for="(item, index) in previews" :key="index">
+                                <div class="flex items-center gap-3 bg-slate-800/80 border border-white/10 rounded-xl p-2">
+                                    <template x-if="item.src">
+                                        <img :src="item.src" class="w-10 h-10 rounded-lg object-cover shrink-0">
+                                    </template>
+                                    <template x-if="!item.src">
+                                        <div class="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center shrink-0 text-slate-500">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                        </div>
+                                    </template>
+                                    <span class="text-[10px] text-slate-300 truncate" x-text="item.name"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
                 </div>
 
                 <button type="submit" class="w-full py-4 bg-white/10 hover:bg-white/15 text-white font-black rounded-xl transition-all uppercase tracking-widest text-xs">

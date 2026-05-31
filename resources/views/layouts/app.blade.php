@@ -696,6 +696,46 @@
     </body>
 
     <script>
+    // Compartilhar ou baixar anexo (PWA mobile — evita abrir doc preso no app)
+    async function shareOrDownloadFile(url, fileName, title, text) {
+        try {
+            const response = await fetch(url, { credentials: 'include' });
+            if (!response.ok) throw new Error('Falha ao carregar arquivo');
+
+            const blob = await response.blob();
+            const mime = blob.type || 'application/octet-stream';
+            const name = fileName || 'anexo';
+            const isMobile = window.matchMedia('(max-width: 640px)').matches
+                || window.navigator.standalone
+                || window.matchMedia('(display-mode: standalone)').matches;
+
+            if (isMobile && navigator.share) {
+                const file = new File([blob], name, { type: mime });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: title || name,
+                        text: text || '',
+                    });
+                    return;
+                }
+            }
+
+            const blobUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = name;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(blobUrl);
+            document.body.removeChild(a);
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                alert('Erro ao abrir anexo. Tente novamente.');
+            }
+        }
+    }
+
     // ============================================
     // OFFLINE SYNC — iOS + Android Compatible
     // ============================================

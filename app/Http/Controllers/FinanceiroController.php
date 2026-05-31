@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DespesaObra;
+use App\Models\DespesaObraAnexo;
 use App\Models\Empreiteira;
 use App\Models\Obra;
 use App\Models\Pagamento;
@@ -19,6 +20,7 @@ class FinanceiroController extends Controller
         'mao_de_obra' => 'Mão de obra',
         'equipamento' => 'Equipamento',
         'servico' => 'Serviço',
+        'retirada' => 'Retirada',
         'outros' => 'Outros',
     ];
 
@@ -40,7 +42,7 @@ class FinanceiroController extends Controller
             : collect();
 
         $despesasBase = DespesaObra::where('obra_id', $obraId)
-            ->with('empreiteira:id,nome')
+            ->with(['empreiteira:id,nome', 'anexos'])
             ->orderBy('data', 'desc')
             ->get();
 
@@ -86,7 +88,20 @@ class FinanceiroController extends Controller
             abort(403);
         }
 
-        return $this->serveComprovante($despesaObra->comprovante_path);
+        $anexo = $despesaObra->anexos()->first();
+        $path = $anexo?->path ?? $despesaObra->comprovante_path;
+
+        return $this->serveComprovante($path);
+    }
+
+    public function anexoDespesa(DespesaObra $despesaObra, DespesaObraAnexo $anexo)
+    {
+        $obraId = session('active_obra_id');
+        if (!$obraId || $despesaObra->obra_id != $obraId || $anexo->despesa_obra_id !== $despesaObra->id) {
+            abort(403);
+        }
+
+        return $this->serveComprovante($anexo->path, $anexo->nome_original);
     }
 
     public function storePagamento(Request $request)
@@ -150,12 +165,14 @@ class FinanceiroController extends Controller
             'data' => 'required|date',
             'descricao' => 'required|string|max:255',
             'fornecedor' => 'nullable|string|max:255',
-            'categoria' => 'nullable|string|in:material,mao_de_obra,equipamento,servico,outros',
+            'categoria' => 'nullable|string|in:material,mao_de_obra,equipamento,servico,retirada,outros',
             'status' => 'required|in:pago,pendente',
             'forma_pagamento' => 'nullable|string|max:50',
             'empreiteira_id' => 'nullable|exists:empreiteiras,id',
             'observacao' => 'nullable|string',
             'comprovante' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:20480',
+            'comprovantes' => 'nullable|array|max:10',
+            'comprovantes.*' => 'file|mimes:pdf,jpg,jpeg,png,webp|max:20480',
         ]);
 
         if (!empty($validated['empreiteira_id'])) {
@@ -165,15 +182,12 @@ class FinanceiroController extends Controller
             }
         }
 
-        $data = collect($validated)->except('comprovante')->all();
+        $data = collect($validated)->except(['comprovante', 'comprovantes'])->all();
         $data['obra_id'] = $obraId;
 
-        if ($request->hasFile('comprovante')) {
-            $data['comprovante_path'] = $request->file('comprovante')
-                ->store('comprovantes/despesas', 'public');
-        }
+        $despesa = DespesaObra::create($data);
 
-        DespesaObra::create($data);
+        $this->storeDespesaAnexos($despesa, $request);
 
         return back()->with('success', 'Despesa registrada!');
     }
@@ -189,6 +203,10 @@ class FinanceiroController extends Controller
             Storage::disk('public')->delete($despesaObra->comprovante_path);
         }
 
+        foreach ($despesaObra->anexos as $anexo) {
+            Storage::disk('public')->delete($anexo->path);
+        }
+
         $despesaObra->delete();
 
         return back()->with('success', 'Despesa removida.');
@@ -201,7 +219,7 @@ class FinanceiroController extends Controller
             'data_fim' => 'nullable|date|after_or_equal:data_inicio',
             'periodo' => 'nullable|in:mes_atual,mes_anterior,30_dias,ano_atual',
             'tipo' => 'nullable|in:todos,recebida,paga,pendente',
-            'categoria' => 'nullable|in:material,mao_de_obra,equipamento,servico,outros',
+            'categoria' => 'nullable|in:material,mao_de_obra,equipamento,servico,retirada,outros',
             'busca' => 'nullable|string|max:100',
         ]);
 
@@ -299,7 +317,7 @@ class FinanceiroController extends Controller
             ->keys()
             ->first();
 
-        $comComprovante = $lancamentos->filter(fn ($l) => !empty($l['comprovante_path']))->count();
+        $comComprovante = $lancamentos->filter(fn ($l) => !empty($l['anexos']) || !empty($l['comprovante_path']))->count();
 
         return [
             'total_recebido' => $totalRecebido,
@@ -355,6 +373,8 @@ class FinanceiroController extends Controller
         }
 
         foreach ($despesas as $despesa) {
+            $anexos = $this->buildDespesaAnexos($despesa);
+
             $items->push([
                 'tipo' => 'despesa',
                 'id' => $despesa->id,
@@ -366,9 +386,8 @@ class FinanceiroController extends Controller
                 'categoria' => $despesa->categoria,
                 'forma_pagamento' => $despesa->forma_pagamento,
                 'comprovante_path' => $despesa->comprovante_path,
-                'comprovante_url' => $despesa->comprovante_path
-                    ? route('despesas.comprovante', $despesa)
-                    : null,
+                'anexos' => $anexos,
+                'comprovante_url' => !empty($anexos) ? $anexos[0]['url'] : null,
                 'empreiteira_id' => $despesa->empreiteira_id,
                 'empreiteira_nome' => $despesa->empreiteira?->nome,
                 'model' => $despesa,
@@ -393,10 +412,64 @@ class FinanceiroController extends Controller
             ->values();
     }
 
-    private function serveComprovante(?string $path)
+    private function storeDespesaAnexos(DespesaObra $despesa, Request $request): void
+    {
+        $files = collect($request->file('comprovantes', []))
+            ->filter()
+            ->values();
+
+        if ($request->hasFile('comprovante')) {
+            $files->prepend($request->file('comprovante'));
+        }
+
+        $firstPath = null;
+
+        foreach ($files as $file) {
+            $path = $file->store('comprovantes/despesas', 'public');
+            $firstPath ??= $path;
+
+            DespesaObraAnexo::create([
+                'despesa_obra_id' => $despesa->id,
+                'path' => $path,
+                'nome_original' => $file->getClientOriginalName(),
+                'mime' => $file->getMimeType(),
+            ]);
+        }
+
+        if ($firstPath) {
+            $despesa->update(['comprovante_path' => $firstPath]);
+        }
+    }
+
+    private function buildDespesaAnexos(DespesaObra $despesa): array
+    {
+        if ($despesa->relationLoaded('anexos') && $despesa->anexos->isNotEmpty()) {
+            return $despesa->anexos->map(fn (DespesaObraAnexo $anexo) => [
+                'id' => $anexo->id,
+                'url' => route('despesas.anexo', [$despesa, $anexo]),
+                'nome' => $anexo->nome_original ?: basename($anexo->path),
+            ])->all();
+        }
+
+        if ($despesa->comprovante_path) {
+            return [[
+                'id' => null,
+                'url' => route('despesas.comprovante', $despesa),
+                'nome' => basename($despesa->comprovante_path),
+            ]];
+        }
+
+        return [];
+    }
+
+    private function serveComprovante(?string $path, ?string $downloadName = null)
     {
         if (!$path || !Storage::disk('public')->exists($path)) {
             abort(404);
+        }
+
+        if ($downloadName) {
+            return Storage::disk('public')->response($path, $downloadName);
         }
 
         return Storage::disk('public')->response($path);

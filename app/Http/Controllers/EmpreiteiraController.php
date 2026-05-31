@@ -35,7 +35,7 @@ class EmpreiteiraController extends Controller
             abort(403);
         }
 
-        $empreiteira->load(['despesas' => fn ($q) => $q->orderByDesc('data')->orderByDesc('id')]);
+        $empreiteira->load(['despesas' => fn ($q) => $q->with('anexos')->orderByDesc('data')->orderByDesc('id')]);
 
         return view('empreiteiras.show', [
             'obra' => $empreiteira->obra,

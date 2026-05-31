@@ -34,4 +34,9 @@ class DespesaObra extends Model
     {
         return $this->belongsTo(Empreiteira::class);
     }
+
+    public function anexos()
+    {
+        return $this->hasMany(DespesaObraAnexo::class);
+    }
 }

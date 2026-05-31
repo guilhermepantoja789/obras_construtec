@@ -6,6 +6,7 @@
         'mao_de_obra' => 'Mão de obra',
         'equipamento' => 'Equipamento',
         'servico' => 'Serviço',
+        'retirada' => 'Retirada',
         'outros' => 'Outros',
     ];
     $formas = [
@@ -58,12 +59,25 @@
                 @endif
             </div>
 
-            <div class="flex items-center gap-2">
-                @if(!empty($lancamento['comprovante_url']))
-                    <a href="{{ $lancamento['comprovante_url'] }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 text-slate-400 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:text-white hover:bg-white/10 transition-all">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
-                        Comprovante
-                    </a>
+            <div class="flex flex-wrap items-center gap-2">
+                @if($isRecebida && !empty($lancamento['comprovante_url']))
+                    <x-anexo-viewer-button
+                        :url="$lancamento['comprovante_url']"
+                        :file-name="'comprovante-recebimento-' . $lancamento['id'] . '.pdf'"
+                        title="Comprovante de recebimento"
+                        :text="$lancamento['descricao']"
+                        label="Comprovante"
+                    />
+                @elseif(!$isRecebida && !empty($lancamento['anexos']))
+                    @foreach($lancamento['anexos'] as $index => $anexo)
+                        <x-anexo-viewer-button
+                            :url="$anexo['url']"
+                            :file-name="$anexo['nome']"
+                            title="Comprovante de despesa"
+                            :text="$lancamento['descricao']"
+                            :label="count($lancamento['anexos']) > 1 ? 'Anexo ' . ($index + 1) : 'Comprovante'"
+                        />
+                    @endforeach
                 @endif
 
                 <form

@@ -61,6 +61,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('pagamentos/{pagamento}', [\App\Http\Controllers\FinanceiroController::class, 'destroyPagamento'])->name('pagamentos.destroy');
         Route::post('despesas', [\App\Http\Controllers\FinanceiroController::class, 'storeDespesa'])->name('despesas.store');
         Route::get('despesas/{despesaObra}/comprovante', [\App\Http\Controllers\FinanceiroController::class, 'comprovanteDespesa'])->name('despesas.comprovante');
+        Route::get('despesas/{despesaObra}/anexos/{anexo}', [\App\Http\Controllers\FinanceiroController::class, 'anexoDespesa'])->name('despesas.anexo');
         Route::delete('despesas/{despesaObra}', [\App\Http\Controllers\FinanceiroController::class, 'destroyDespesa'])->name('despesas.destroy');
         Route::get('obras/{obra}/contrato', [\App\Http\Controllers\ContratoController::class, 'edit'])->name('contrato.edit');
         Route::put('obras/{obra}/contrato', [\App\Http\Controllers\ContratoController::class, 'update'])->name('contrato.update');
