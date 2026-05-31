@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DespesaObra;
+use App\Models\Empreiteira;
 use App\Models\Obra;
 use App\Models\Pagamento;
 use App\Models\Proposta;
@@ -39,6 +40,7 @@ class FinanceiroController extends Controller
             : collect();
 
         $despesasBase = DespesaObra::where('obra_id', $obraId)
+            ->with('empreiteira:id,nome')
             ->orderBy('data', 'desc')
             ->get();
 
@@ -51,6 +53,10 @@ class FinanceiroController extends Controller
         $lancamentos = $this->buildLancamentos($pagamentos, $despesas);
         $kpis = $this->buildKpis($pagamentos, $despesas, $lancamentos, $filters);
 
+        $empreiteiras = Empreiteira::where('obra_id', $obraId)
+            ->orderBy('nome')
+            ->get(['id', 'nome', 'valor_acordado']);
+
         return view('financeiro.index', [
             'obra' => $obra,
             'proposta' => $proposta,
@@ -59,6 +65,7 @@ class FinanceiroController extends Controller
             'filters' => $filters,
             'totalRecebidoGeral' => $totalRecebidoGeral,
             'categorias' => self::CATEGORIAS,
+            'empreiteiras' => $empreiteiras,
         ]);
     }
 
@@ -146,9 +153,17 @@ class FinanceiroController extends Controller
             'categoria' => 'nullable|string|in:material,mao_de_obra,equipamento,servico,outros',
             'status' => 'required|in:pago,pendente',
             'forma_pagamento' => 'nullable|string|max:50',
+            'empreiteira_id' => 'nullable|exists:empreiteiras,id',
             'observacao' => 'nullable|string',
             'comprovante' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:20480',
         ]);
+
+        if (!empty($validated['empreiteira_id'])) {
+            $empreiteira = Empreiteira::findOrFail($validated['empreiteira_id']);
+            if ($empreiteira->obra_id != $obraId) {
+                abort(403);
+            }
+        }
 
         $data = collect($validated)->except('comprovante')->all();
         $data['obra_id'] = $obraId;
@@ -354,6 +369,8 @@ class FinanceiroController extends Controller
                 'comprovante_url' => $despesa->comprovante_path
                     ? route('despesas.comprovante', $despesa)
                     : null,
+                'empreiteira_id' => $despesa->empreiteira_id,
+                'empreiteira_nome' => $despesa->empreiteira?->nome,
                 'model' => $despesa,
             ]);
         }

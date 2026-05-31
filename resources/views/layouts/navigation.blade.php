@@ -94,6 +94,10 @@
                         <x-nav-link :href="route('financeiro.index')" :active="request()->routeIs('financeiro.*')" class="text-slate-400 hover:text-white border-transparent hover:border-amber-500 transition-all">
                             {{ __('Financeiro') }}
                         </x-nav-link>
+
+                        <x-nav-link :href="route('empreiteiras.index')" :active="request()->routeIs('empreiteiras.*')" class="text-slate-400 hover:text-white border-transparent hover:border-amber-500 transition-all">
+                            {{ __('Empreiteiras') }}
+                        </x-nav-link>
                     @endif
 
                     @if(!Auth::user()->isClient())

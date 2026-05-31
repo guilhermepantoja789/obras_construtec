@@ -47,6 +47,21 @@
                     <input type="text" name="fornecedor" placeholder="Quem recebeu" value="{{ old('fornecedor') }}" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm py-3.5 px-4">
                 </div>
 
+                @if(isset($empreiteiras) && $empreiteiras->isNotEmpty())
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Empreiteira (opcional)</label>
+                    <select name="empreiteira_id" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm py-3.5 px-4">
+                        <option value="">Nenhuma — despesa avulsa</option>
+                        @foreach($empreiteiras as $emp)
+                            <option value="{{ $emp->id }}" @selected(old('empreiteira_id') == $emp->id)>
+                                {{ $emp->nome }} — R$ {{ number_format($emp->valor_acordado, 2, ',', '.') }} acordado
+                            </option>
+                        @endforeach
+                    </select>
+                    <p class="text-[9px] text-slate-600 mt-1.5">Pagamentos vinculados somam no progresso da empreiteira.</p>
+                </div>
+                @endif
+
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Categoria</label>

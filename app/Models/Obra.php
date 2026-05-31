@@ -73,6 +73,11 @@ class Obra extends Model
         return $this->hasMany(DespesaObra::class);
     }
 
+    public function empreiteiras()
+    {
+        return $this->hasMany(Empreiteira::class);
+    }
+
     public function getLocalizacaoExibicaoAttribute()
     {
         if ($this->localizacao) {

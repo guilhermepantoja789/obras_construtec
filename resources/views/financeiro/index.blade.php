@@ -57,7 +57,7 @@
 
     @php
         $openRecebida = $errors->hasAny(['valor_pago', 'data_pagamento', 'proposta_id', 'observacao', 'comprovante', 'forma_pagamento']);
-        $openDespesa = $errors->hasAny(['valor', 'data', 'descricao', 'fornecedor', 'categoria', 'status', 'forma_pagamento', 'observacao', 'comprovante']);
+        $openDespesa = $errors->hasAny(['valor', 'data', 'descricao', 'fornecedor', 'categoria', 'status', 'forma_pagamento', 'empreiteira_id', 'observacao', 'comprovante']);
     @endphp
 
     <div

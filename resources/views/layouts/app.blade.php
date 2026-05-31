@@ -448,6 +448,18 @@
                         </a>
                         @endif
 
+                        <!-- Empreiteiras -->
+                        @if(Auth::user()->isChefe())
+                        <a href="{{ route('empreiteiras.index') }}" class="flex flex-col items-center gap-2 group">
+                            <div class="w-12 h-12 bg-orange-500/10 rounded-2xl flex items-center justify-center text-orange-500 border border-orange-500/20 group-active:scale-90 transition-transform">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Empreiteiras</span>
+                        </a>
+                        @endif
+
                         <!-- Contrato -->
                         @if(Auth::user()->isChefe())
                         <a href="{{ $activeObraId ? route('contrato.edit', $activeObraId) : '#' }}" class="flex flex-col items-center gap-2 group {{ !$activeObraId ? 'opacity-50' : '' }}">

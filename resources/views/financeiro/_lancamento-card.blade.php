@@ -53,6 +53,9 @@
                 @if(!empty($lancamento['forma_pagamento']))
                     <span class="text-[10px] text-slate-600">· {{ $formas[$lancamento['forma_pagamento']] ?? $lancamento['forma_pagamento'] }}</span>
                 @endif
+                @if(!$isRecebida && !empty($lancamento['empreiteira_nome']))
+                    <a href="{{ route('empreiteiras.show', $lancamento['empreiteira_id']) }}" class="text-[10px] text-orange-400 hover:text-orange-300 font-bold">· {{ $lancamento['empreiteira_nome'] }}</a>
+                @endif
             </div>
 
             <div class="flex items-center gap-2">

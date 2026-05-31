@@ -8,6 +8,7 @@ class DespesaObra extends Model
 {
     protected $fillable = [
         'obra_id',
+        'empreiteira_id',
         'valor',
         'data',
         'descricao',
@@ -27,5 +28,10 @@ class DespesaObra extends Model
     public function obra()
     {
         return $this->belongsTo(Obra::class);
+    }
+
+    public function empreiteira()
+    {
+        return $this->belongsTo(Empreiteira::class);
     }
 }

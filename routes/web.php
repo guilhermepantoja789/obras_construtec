@@ -50,6 +50,11 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', \App\Http\Controllers\UserController::class)->except(['show']);
         Route::resource('propostas', \App\Http\Controllers\PropostaController::class);
         Route::post('propostas/import', [\App\Http\Controllers\PropostaController::class, 'import'])->name('propostas.import');
+        Route::get('empreiteiras', [\App\Http\Controllers\EmpreiteiraController::class, 'index'])->name('empreiteiras.index');
+        Route::get('empreiteiras/{empreiteira}', [\App\Http\Controllers\EmpreiteiraController::class, 'show'])->name('empreiteiras.show');
+        Route::post('empreiteiras', [\App\Http\Controllers\EmpreiteiraController::class, 'store'])->name('empreiteiras.store');
+        Route::match(['put', 'patch'], 'empreiteiras/{empreiteira}', [\App\Http\Controllers\EmpreiteiraController::class, 'update'])->name('empreiteiras.update');
+        Route::delete('empreiteiras/{empreiteira}', [\App\Http\Controllers\EmpreiteiraController::class, 'destroy'])->name('empreiteiras.destroy');
         Route::get('financeiro', [\App\Http\Controllers\FinanceiroController::class, 'index'])->name('financeiro.index');
         Route::post('pagamentos', [\App\Http\Controllers\FinanceiroController::class, 'storePagamento'])->name('pagamentos.store');
         Route::get('pagamentos/{pagamento}/comprovante', [\App\Http\Controllers\FinanceiroController::class, 'comprovantePagamento'])->name('pagamentos.comprovante');
