@@ -23,11 +23,14 @@ class Obra extends Model
         'cnpj_empresa_contratada',
         'engenheiro_responsavel',
         'prazo_dias',
+        'encargos_padrao',
     ];
 
     protected $casts = [
         'data_inicio' => 'date',
         'data_fim_prevista' => 'date',
+        'prazo_dias' => 'integer',
+        'encargos_padrao' => 'array',
     ];
 
     public function users()
@@ -63,6 +66,16 @@ class Obra extends Model
     public function contrato()
     {
         return $this->hasOne(Contrato::class);
+    }
+
+    public function despesas()
+    {
+        return $this->hasMany(DespesaObra::class);
+    }
+
+    public function empreiteiras()
+    {
+        return $this->hasMany(Empreiteira::class);
     }
 
     public function getLocalizacaoExibicaoAttribute()

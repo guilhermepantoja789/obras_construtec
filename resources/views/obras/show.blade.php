@@ -21,12 +21,14 @@
                         </button>
                     </form>
                 @endif
+                @if(Auth::user()->isChefe())
                 <a href="{{ route('obras.edit', $obra) }}" class="inline-flex items-center px-4 py-2 bg-amber-500 rounded-xl font-bold text-[10px] text-slate-900 uppercase tracking-widest hover:bg-amber-400 transition shadow-lg shadow-amber-500/20">
                     <svg class="w-3.5 h-3.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                     </svg>
                     Editar
                 </a>
+                @endif
             </div>
         </div>
     </x-slot>
@@ -111,13 +113,20 @@
                                 </div>
                                 <h3 class="text-sm font-bold text-white uppercase tracking-widest">Propostas Comerciais</h3>
                             </div>
+                            @if(Auth::user()->isChefe())
                             <a href="{{ route('propostas.create') }}" class="text-[10px] font-black text-amber-500 uppercase tracking-widest hover:text-amber-400 transition-colors">
                                 + Nova Proposta
                             </a>
+                            @endif
                         </div>
 
                         <div class="space-y-3">
-                            @forelse($obra->propostas as $proposta)
+                            @php
+                                $propostasVisiveis = Auth::user()->isClient()
+                                    ? $obra->propostas->where('status', 'aceita')
+                                    : $obra->propostas;
+                            @endphp
+                            @forelse($propostasVisiveis as $proposta)
                                 <div class="flex items-center justify-between p-4 bg-slate-900/50 rounded-2xl border border-white/5 hover:border-white/20 transition-all group">
                                     <div class="flex items-center gap-4">
                                         <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-xs font-black text-slate-400 group-hover:text-amber-500 transition-colors">
@@ -132,11 +141,13 @@
                                                     @else bg-blue-500/10 text-blue-500 @endif">
                                                     {{ $proposta->status }}
                                                 </span>
+                                                @if(Auth::user()->isChefe())
                                                 <span class="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">R$ {{ number_format($proposta->valor_total, 2, ',', '.') }}</span>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
-                                    <a href="{{ route('propostas.show', $proposta) }}" class="p-2 text-slate-600 hover:text-white transition-colors">
+                                    <a href="{{ Auth::user()->isClient() ? route('propostas.cliente.show', $proposta) : route('propostas.show', $proposta) }}" class="p-2 text-slate-600 hover:text-white transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                                     </a>
                                 </div>

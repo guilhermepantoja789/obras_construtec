@@ -7,40 +7,85 @@
                     Cronograma de Etapas
                 </h2>
             </div>
-            
+
             @if(Auth::user()->isChefe())
-            <button @click="$dispatch('open-add-etapa-modal')" class="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all shadow-lg shadow-blue-600/20 text-[10px] font-black uppercase tracking-widest active:scale-95">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                {{ __('Nova Etapa') }}
-            </button>
+            <div class="flex flex-wrap items-center gap-2">
+                @if($propostaAceita)
+                <form action="{{ route('etapa-obras.regenerar') }}" method="POST" onsubmit="return confirm('Regenerar etapas a partir da proposta aceita? Etapas vindas da proposta serão recriadas e o progresso delas será resetado.')">
+                    @csrf
+                    <button type="submit" class="flex items-center gap-2 px-4 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95">
+                        Regenerar da Proposta
+                    </button>
+                </form>
+                @endif
+                <button @click="$dispatch('open-add-etapa-modal')" class="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all shadow-lg shadow-blue-600/20 text-[10px] font-black uppercase tracking-widest active:scale-95">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Nova Etapa
+                </button>
+            </div>
             @endif
         </div>
     </x-slot>
 
-    <div class="max-w-5xl mx-auto space-y-6 pb-24 px-4" 
-        x-data="{ 
-            showAddEtapaModal: false, 
-            showEditEtapaModal: false,
+    <div class="max-w-5xl mx-auto space-y-6 pb-24 px-4"
+        x-data="{
+            showAddEtapaModal: {{ ($errors->any() && old('_method') !== 'PUT') ? 'true' : 'false' }},
+            showEditEtapaModal: {{ ($errors->any() && old('_method') === 'PUT') ? 'true' : 'false' }},
             selectedEtapa: null,
+            collapsedGroups: {},
+            viewGrouped: true,
+            dragId: null,
+            etapaOrder: @json($etapas->pluck('id')),
             openEditModal(etapa) {
-                this.selectedEtapa = etapa;
+                this.selectedEtapa = {
+                    ...etapa,
+                    data_inicio_prevista: etapa.data_inicio_prevista ? String(etapa.data_inicio_prevista).substring(0, 10) : '',
+                    data_fim_prevista: etapa.data_fim_prevista ? String(etapa.data_fim_prevista).substring(0, 10) : '',
+                    data_inicio_real: etapa.data_inicio_real ? String(etapa.data_inicio_real).substring(0, 10) : '',
+                    data_fim_real: etapa.data_fim_real ? String(etapa.data_fim_real).substring(0, 10) : '',
+                };
                 this.showEditEtapaModal = true;
+            },
+            toggleGroup(ordem) {
+                this.collapsedGroups[ordem] = !this.collapsedGroups[ordem];
+            },
+            isCollapsed(ordem) {
+                return !!this.collapsedGroups[ordem];
+            },
+            async submitReorder() {
+                const form = document.getElementById('etapa-reorder-form');
+                const container = document.getElementById('etapa-order-inputs');
+                container.innerHTML = '';
+                this.etapaOrder.forEach(id => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'order[]';
+                    input.value = id;
+                    container.appendChild(input);
+                });
+                form.submit();
+            },
+            handleDrop(targetId) {
+                if (!this.dragId || this.dragId === targetId) return;
+                const from = this.etapaOrder.indexOf(this.dragId);
+                const to = this.etapaOrder.indexOf(targetId);
+                if (from === -1 || to === -1) return;
+                this.etapaOrder.splice(from, 1);
+                this.etapaOrder.splice(to, 0, this.dragId);
+                this.dragId = null;
+                this.submitReorder();
             }
         }"
         @open-add-etapa-modal.window="showAddEtapaModal = true"
+        @etapa-drag-start.window="dragId = $event.detail"
+        @etapa-drop.window="handleDrop($event.detail)"
     >
-
         <!-- Resumo de Progresso -->
         <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl">
             <div class="flex justify-between items-end mb-4">
                 <div>
-                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Progresso Geral</p>
-                    <h3 class="text-2xl font-black text-white leading-none">
-                        @php
-                            $progressoGeral = $etapas->count() > 0 ? round($etapas->avg('percentual_concluido')) : 0;
-                        @endphp
-                        {{ $progressoGeral }}%
-                    </h3>
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Progresso Geral (ponderado)</p>
+                    <h3 class="text-2xl font-black text-white leading-none">{{ $progressoGeral }}%</h3>
                 </div>
                 <div class="text-right">
                     <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Fases Concluídas</p>
@@ -50,80 +95,88 @@
             <div class="w-full h-3 bg-slate-900/50 rounded-full overflow-hidden border border-white/5">
                 <div class="h-full bg-gradient-to-r from-blue-600 to-cyan-400 transition-all duration-1000 shadow-[0_0_15px_rgba(37,99,235,0.3)]" style="width: {{ $progressoGeral }}%"></div>
             </div>
+            @if(Auth::user()->isChefe())
+            <div class="flex items-center justify-between mt-4 pt-4 border-t border-white/5">
+                <p class="text-[9px] text-slate-600 uppercase font-bold">Arraste os cards para reordenar (numeração 1, 2, 3…)</p>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" x-model="viewGrouped" class="rounded bg-slate-900 border-white/10 text-blue-500 focus:ring-blue-500">
+                    <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Agrupar por fase</span>
+                </label>
+            </div>
+            @endif
         </div>
+
+        <form id="etapa-reorder-form" action="{{ route('etapa-obras.reorder') }}" method="POST" class="hidden">
+            @csrf
+            <div id="etapa-order-inputs"></div>
+        </form>
 
         <!-- Lista de Etapas -->
-        <div class="grid grid-cols-1 gap-4">
-            @forelse($etapas as $etapa)
-                <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-xl transition-all hover:border-white/20 group relative overflow-hidden">
-                    <div class="flex items-start gap-4 relative z-10">
-                        <div class="shrink-0 mt-1">
-                            <div class="w-10 h-10 rounded-xl flex items-center justify-center border transition-all
-                                @if($etapa->status == 'concluida') bg-green-500/10 border-green-500/20 text-green-500
-                                @elseif($etapa->status == 'em_progresso') bg-blue-500/10 border-blue-500/20 text-blue-500
-                                @elseif($etapa->status == 'atrasada') bg-rose-500/10 border-rose-500/20 text-rose-500
-                                @else bg-slate-800 border-white/10 text-slate-500 @endif">
-                                <span class="text-xs font-black">{{ $etapa->ordem ?: $loop->iteration }}</span>
-                            </div>
-                        </div>
-                        <div class="flex-1">
-                            <div class="flex justify-between items-start mb-2">
-                                <div>
-                                    <h4 class="text-white font-bold">{{ $etapa->nome }}</h4>
-                                    <p class="text-[9px] text-slate-500 uppercase font-black tracking-widest">
-                                        {{ $etapa->data_inicio_prevista ? $etapa->data_inicio_prevista->format('d/m/Y') : 'Sem data' }}
-                                    </p>
-                                </div>
-                                @if(Auth::user()->isChefe())
-                                <button @click="openEditModal({{ json_encode($etapa) }})" class="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-slate-400 transition-colors active:scale-90">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                                </button>
-                                @endif
-                            </div>
-                            <div class="flex justify-between items-center text-[10px] font-black uppercase tracking-tighter mb-1.5 mt-4">
-                                <span class="text-slate-500">Andamento</span>
-                                <span class="text-white">{{ $etapa->percentual_concluido }}%</span>
-                            </div>
-                            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-white/5">
-                                <div class="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" style="width: {{ $etapa->percentual_concluido }}%"></div>
-                            </div>
+        @if($etapas->isEmpty())
+            <div class="p-12 text-center border-2 border-dashed border-white/5 rounded-3xl">
+                <p class="text-slate-500 text-sm font-bold uppercase tracking-widest">Organize sua obra por etapas para acompanhar o progresso</p>
+                @if($propostaAceita)
+                    <p class="text-slate-600 text-xs mt-2">Aceite uma proposta com itens marcados como etapa ou use «Regenerar da Proposta».</p>
+                @endif
+            </div>
+        @else
+            <!-- Vista agrupada -->
+            <div x-show="viewGrouped" class="space-y-4">
+                @foreach($grupos as $grupo)
+                    @php $parent = $grupo['etapa']; $ordemKey = (string) ($parent->ordem ?? $loop->iteration); @endphp
+                    <div class="space-y-2">
+                        @if(count($grupo['children']) > 0)
+                        <button type="button" @click="toggleGroup('{{ $ordemKey }}')" class="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest px-2 hover:text-white transition-colors">
+                            <svg class="w-3 h-3 transition-transform" :class="isCollapsed('{{ $ordemKey }}') ? '' : 'rotate-90'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            Fase {{ $ordemKey }} · {{ count($grupo['children']) }} sub-etapa(s)
+                        </button>
+                        @endif
+                        @include('etapa-obras._etapa-card', ['etapa' => $parent, 'depth' => $parent->ordemDepth()])
+                        <div x-show="!isCollapsed('{{ $ordemKey }}')" class="space-y-2">
+                            @foreach($grupo['children'] as $child)
+                                @include('etapa-obras._etapa-card', ['etapa' => $child, 'isChild' => true])
+                            @endforeach
                         </div>
                     </div>
-                </div>
-            @empty
-                <div class="p-12 text-center border-2 border-dashed border-white/5 rounded-3xl">
-                    <p class="text-slate-500 text-sm font-bold uppercase tracking-widest">Organize sua obra por etapas para acompanhar o progresso</p>
-                </div>
-            @endforelse
-        </div>
+                @endforeach
+            </div>
 
-        <!-- MODAIS -->
+            <!-- Vista plana (para drag-drop) -->
+            <div x-show="!viewGrouped" class="grid grid-cols-1 gap-4" x-cloak>
+                @foreach($etapas as $etapa)
+                    @include('etapa-obras._etapa-card', ['etapa' => $etapa])
+                @endforeach
+            </div>
+        @endif
+
+        <!-- MODAL CRIAR -->
         <div x-show="showAddEtapaModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4" style="display:none;">
             <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-md" @click="showAddEtapaModal = false"></div>
-            <div class="relative w-full max-w-lg bg-slate-900 border border-white/10 rounded-3xl shadow-2xl p-6" x-transition>
+            <div class="relative w-full max-w-lg bg-slate-900 border border-white/10 rounded-3xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto" x-transition>
                 <h3 class="text-white font-black uppercase tracking-widest text-sm mb-6">Cadastrar Nova Etapa</h3>
                 <form action="{{ route('etapa-obras.store') }}" method="POST" class="space-y-4">
                     @csrf
                     <div>
                         <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Nome da Etapa</label>
-                        <input type="text" name="nome" required placeholder="Ex: Fundação, Alvenaria..." class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm focus:border-blue-500">
+                        <input type="text" name="nome" required placeholder="Ex: Fundação, Alvenaria..." value="{{ old('nome') }}" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm focus:border-blue-500">
                     </div>
                     <input type="hidden" name="valor" value="0">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Data Prevista</label>
-                            <input type="date" name="data_inicio_prevista" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Ordem</label>
+                            <input type="text" name="ordem" placeholder="Ex: 1, 1.1, 1.1.2" value="{{ old('ordem') }}" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm">
                         </div>
                         <div>
-                            <div class="flex items-center justify-between mb-1">
-                                <label class="text-[10px] font-bold text-slate-500 uppercase block">Ordem</label>
-                                <span class="text-[8px] text-slate-600 uppercase font-black">Posição na lista</span>
-                            </div>
-                            <input type="number" name="ordem" placeholder="1, 2, 3..." class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Início Previsto</label>
+                            <input type="date" name="data_inicio_prevista" value="{{ old('data_inicio_prevista') }}" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Fim Previsto</label>
+                            <input type="date" name="data_fim_prevista" value="{{ old('data_fim_prevista') }}" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm">
                         </div>
                     </div>
                     <p class="text-[9px] text-slate-600 uppercase font-bold leading-relaxed">
-                        * A **ordem** define em qual posição a etapa aparecerá na lista. Etapas com ordem 1 aparecem no topo.
+                        Use ordem hierárquica (1, 1.1, 1.2) para espelhar a planilha da proposta.
                     </p>
                     <button type="submit" class="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl transition-all shadow-lg shadow-blue-600/20 uppercase tracking-widest text-xs mt-2">
                         Criar Etapa
@@ -132,22 +185,26 @@
             </div>
         </div>
 
+        <!-- MODAL EDITAR -->
         <div x-show="showEditEtapaModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4" style="display:none;">
             <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-md" @click="showEditEtapaModal = false"></div>
-            <div class="relative w-full max-w-lg bg-slate-900 border border-white/10 rounded-3xl shadow-2xl p-6" x-transition>
-                <h3 class="text-white font-black uppercase tracking-widest text-sm mb-6">Atualizar Andamento</h3>
+            <div class="relative w-full max-w-lg bg-slate-900 border border-white/10 rounded-3xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto" x-transition>
+                <h3 class="text-white font-black uppercase tracking-widest text-sm mb-6">Atualizar Etapa</h3>
                 <form :action="'{{ url('etapa-obras') }}/' + selectedEtapa?.id" method="POST" class="space-y-4">
-
                     @csrf @method('PUT')
                     <input type="hidden" name="valor" :value="selectedEtapa?.valor || 0">
                     <div>
                         <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Nome</label>
-                        <input type="text" name="nome" :value="selectedEtapa?.nome" required class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm">
+                        <input type="text" name="nome" x-model="selectedEtapa.nome" required class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Ordem</label>
+                        <input type="text" name="ordem" x-model="selectedEtapa.ordem" placeholder="Ex: 1.1.2" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm">
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Status</label>
-                            <select name="status" :value="selectedEtapa?.status" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-xs">
+                            <select name="status" x-model="selectedEtapa.status" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-xs">
                                 <option value="pendente">Pendente</option>
                                 <option value="em_progresso">Em Progresso</option>
                                 <option value="concluida">Concluída</option>
@@ -156,7 +213,23 @@
                         </div>
                         <div>
                             <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Progresso (%)</label>
-                            <input type="number" name="percentual_concluido" :value="selectedEtapa?.percentual_concluido" min="0" max="100" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm">
+                            <input type="number" name="percentual_concluido" x-model="selectedEtapa.percentual_concluido" min="0" max="100" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Início Previsto</label>
+                            <input type="date" name="data_inicio_prevista" x-model="selectedEtapa.data_inicio_prevista" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Fim Previsto</label>
+                            <input type="date" name="data_fim_prevista" x-model="selectedEtapa.data_fim_prevista" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Início Real</label>
+                            <input type="date" name="data_inicio_real" x-model="selectedEtapa.data_inicio_real" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Fim Real</label>
+                            <input type="date" name="data_fim_real" x-model="selectedEtapa.data_fim_real" class="w-full bg-slate-800 border-white/10 rounded-xl text-white text-sm">
                         </div>
                     </div>
                     <button type="submit" class="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl transition-all shadow-lg shadow-blue-600/20 uppercase tracking-widest text-xs">
@@ -165,6 +238,5 @@
                 </form>
             </div>
         </div>
-
     </div>
 </x-app-layout>

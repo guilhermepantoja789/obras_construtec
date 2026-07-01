@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Obra;
+use App\Models\DespesaObra;
 use App\Models\DiarioPost;
 use App\Models\EtapaObra;
 use App\Models\User;
+use App\Services\EtapaObraSyncService;
+use App\Support\OrdemHelper;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -23,20 +26,25 @@ class DashboardController extends Controller
         $obra = Obra::with(['users', 'etapas', 'propostas'])->findOrFail($obraId);
 
         // Estatísticas da Obra
+        $etapas = $obra->etapas;
         $stats = [
             'total_posts' => DiarioPost::where('obra_id', $obraId)->count(),
             'today_posts' => DiarioPost::where('obra_id', $obraId)->whereDate('data_postagem', Carbon::today())->count(),
             'equipe_count' => $obra->users()->count(),
-            'progresso_geral' => $obra->etapas()->avg('percentual_concluido') ?? 0,
+            'progresso_geral' => EtapaObraSyncService::calcularProgressoPonderado($etapas),
             'etapas_concluidas' => $obra->etapas()->where('status', 'concluida')->count(),
             'total_etapas' => $obra->etapas()->count(),
         ];
 
         // Financeiro simplificado
         $proposta = $obra->propostas->where('status', 'aceita')->first() ?? $obra->propostas->first();
+        $valorRecebido = $proposta ? $proposta->pagamentos()->sum('valor_pago') : 0;
+        $valorGasto = DespesaObra::where('obra_id', $obraId)->where('status', 'pago')->sum('valor');
         $financeiro = [
             'valor_total' => $proposta ? $proposta->valor_total : 0,
-            'valor_pago' => $proposta ? $proposta->pagamentos()->sum('valor_pago') : 0,
+            'valor_pago' => $valorRecebido,
+            'valor_gasto' => $valorGasto,
+            'saldo_operacional' => $valorRecebido - $valorGasto,
         ];
         $financeiro['saldo_devedor'] = $financeiro['valor_total'] - $financeiro['valor_pago'];
         $financeiro['percentual_pago'] = $financeiro['valor_total'] > 0 
@@ -44,11 +52,9 @@ class DashboardController extends Controller
             : 0;
 
         // Próximas etapas (não concluídas)
-        $proximas_etapas = $obra->etapas()
-            ->where('status', '!=', 'concluida')
-            ->orderBy('ordem')
-            ->take(3)
-            ->get();
+        $proximas_etapas = OrdemHelper::sortCollection(
+            $obra->etapas()->where('status', '!=', 'concluida')->get()
+        )->take(3);
 
         // Posts recentes
         $recent_posts = DiarioPost::where('obra_id', $obraId)

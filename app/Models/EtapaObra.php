@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Support\OrdemHelper;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class EtapaObra extends Model
@@ -10,6 +12,7 @@ class EtapaObra extends Model
 
     protected $fillable = [
         'obra_id',
+        'proposta_item_id',
         'nome',
         'valor',
         'descricao',
@@ -27,6 +30,7 @@ class EtapaObra extends Model
         'data_fim_prevista' => 'date',
         'data_inicio_real' => 'date',
         'data_fim_real' => 'date',
+        'valor' => 'decimal:2',
     ];
 
     public function obra()
@@ -34,8 +38,39 @@ class EtapaObra extends Model
         return $this->belongsTo(Obra::class);
     }
 
+    public function propostaItem()
+    {
+        return $this->belongsTo(PropostaItem::class);
+    }
+
     public function posts()
     {
         return $this->hasMany(DiarioPost::class, 'etapa_obra_id');
+    }
+
+    public function ordemDepth(): int
+    {
+        return OrdemHelper::depth($this->ordem);
+    }
+
+    public function isFromProposta(): bool
+    {
+        return $this->proposta_item_id !== null
+            || $this->descricao === 'Gerado automaticamente via Proposta';
+    }
+
+    public function applyAutoStatus(array $attributes): array
+    {
+        if (($attributes['status'] ?? $this->status) === 'concluida') {
+            return $attributes;
+        }
+
+        $fim = $attributes['data_fim_prevista'] ?? $this->data_fim_prevista;
+
+        if ($fim && Carbon::parse($fim)->startOfDay()->lt(now()->startOfDay())) {
+            $attributes['status'] = 'atrasada';
+        }
+
+        return $attributes;
     }
 }

@@ -6,8 +6,12 @@ use App\Models\Proposta;
 use App\Models\PropostaItem;
 use App\Models\EtapaObra;
 use App\Models\Obra;
+use App\Services\EtapaObraSyncService;
+use App\Services\PropostaCalculoService;
+use App\Support\OrdemHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Reader\Csv;
 
@@ -30,7 +34,9 @@ class PropostaController extends Controller
         if (!$obraId) return redirect()->route('obras.index');
         
         $obra = Obra::findOrFail($obraId);
-        return view('propostas.create', compact('obra'));
+        $encargosIniciais = PropostaCalculoService::templateEncargos($obra->encargos_padrao);
+
+        return view('propostas.create', compact('obra', 'encargosIniciais'));
     }
 
     public function store(Request $request)
@@ -48,46 +54,45 @@ class PropostaController extends Controller
 
             'items.*.is_etapa' => 'nullable',
             'items.*.ordem' => 'nullable|string',
-
+            'encargos' => 'nullable|array',
+            'encargos.*.percent' => 'nullable|numeric|min:0|max:100',
+            'encargos.*.ativo' => 'nullable',
         ]);
 
         $obraId = session('active_obra_id');
+        if (!$obraId) {
+            return redirect()->route('obras.index')->with('error', 'Selecione uma obra primeiro.');
+        }
 
-        DB::transaction(function () use ($validated, $obraId) {
-            $total = 0;
-            foreach ($validated['items'] as $item) {
-                $total += $item['quantidade'] * $item['valor_unitario'];
-            }
+        $encargos = PropostaCalculoService::normalizarEncargosRequest($validated['encargos'] ?? []);
+        $totais = PropostaCalculoService::calcularTotais($validated['items'], $encargos);
 
+        DB::transaction(function () use ($validated, $obraId, $encargos, $totais) {
             $proposta = Proposta::create([
                 'obra_id' => $obraId,
                 'titulo' => $validated['titulo'],
                 'escopo' => $validated['escopo'],
                 'data_proposta' => $validated['data_proposta'],
-                'valor_total' => $total,
+                'subtotal_itens' => $totais['subtotal_itens'],
+                'encargos' => $encargos,
+                'valor_total' => $totais['valor_total'],
                 'status' => $validated['status'],
             ]);
 
             foreach ($validated['items'] as $itemData) {
                 $subtotal = $itemData['quantidade'] * $itemData['valor_unitario'];
-                $item = $proposta->items()->create(array_merge($itemData, [
+                $proposta->items()->create(array_merge($itemData, [
                     'subtotal' => $subtotal,
                     'is_etapa' => isset($itemData['is_etapa']) && $itemData['is_etapa'] == '1',
                 ]));
-
-                // If it's an accepted proposal and item is an etapa, create EtapaObra
-                if ($proposta->status === 'aceita' && $item->is_etapa) {
-                    EtapaObra::create([
-                        'obra_id' => $obraId,
-                        'nome' => $item->descricao,
-                        'valor' => $item->subtotal,
-                        'descricao' => 'Gerado automaticamente via Proposta',
-                        'ordem' => $item->ordem,
-                        'status' => 'pendente',
-                        'percentual_concluido' => 0,
-                    ]);
-                }
             }
+
+            if ($proposta->status === 'aceita') {
+                $proposta->load('items');
+                EtapaObraSyncService::syncFromProposta($proposta);
+            }
+
+            Obra::where('id', $obraId)->update(['encargos_padrao' => $encargos]);
         });
 
         return redirect()->route('obras.show', $obraId)->with('success', 'Proposta criada com sucesso!');
@@ -95,9 +100,16 @@ class PropostaController extends Controller
     
     public function edit(Proposta $proposta)
     {
-        $proposta->load('items');
+        $proposta->setRelation(
+            'items',
+            OrdemHelper::sortCollection($proposta->items()->get())
+        );
         $obra = $proposta->obra;
-        return view('propostas.edit', compact('proposta', 'obra'));
+        $encargosIniciais = PropostaCalculoService::templateEncargos(
+            $proposta->encargos ?? $obra->encargos_padrao
+        );
+
+        return view('propostas.edit', compact('proposta', 'obra', 'encargosIniciais'));
     }
 
     public function update(Request $request, Proposta $proposta)
@@ -115,49 +127,51 @@ class PropostaController extends Controller
 
             'items.*.is_etapa' => 'nullable',
             'items.*.ordem' => 'nullable|string',
-
+            'encargos' => 'nullable|array',
+            'encargos.*.percent' => 'nullable|numeric|min:0|max:100',
+            'encargos.*.ativo' => 'nullable',
         ]);
 
-        DB::transaction(function () use ($validated, $proposta) {
-            $total = 0;
-            foreach ($validated['items'] as $item) {
-                $total += $item['quantidade'] * $item['valor_unitario'];
-            }
+        $encargos = PropostaCalculoService::normalizarEncargosRequest($validated['encargos'] ?? []);
+        $totais = PropostaCalculoService::calcularTotais($validated['items'], $encargos);
 
+        DB::transaction(function () use ($validated, $proposta, $encargos, $totais) {
             $wasAlreadyAccepted = $proposta->status === 'aceita';
 
             $proposta->update([
                 'titulo' => $validated['titulo'],
                 'escopo' => $validated['escopo'],
                 'data_proposta' => $validated['data_proposta'],
-                'valor_total' => $total,
+                'subtotal_itens' => $totais['subtotal_itens'],
+                'encargos' => $encargos,
+                'valor_total' => $totais['valor_total'],
                 'status' => $validated['status'],
             ]);
 
-            // Simple approach: remove old items and create new ones
             $proposta->items()->delete();
 
             foreach ($validated['items'] as $itemData) {
                 $subtotal = $itemData['quantidade'] * $itemData['valor_unitario'];
-                $item = $proposta->items()->create(array_merge($itemData, [
+                $proposta->items()->create(array_merge($itemData, [
                     'subtotal' => $subtotal,
                     'is_etapa' => isset($itemData['is_etapa']) && $itemData['is_etapa'] == '1',
                 ]));
-
-                // If it just became accepted (or stayed accepted and we want to sync - though syncing is complex)
-                // For now, only generate if it WAS NOT accepted and NOW IS.
-                if (!$wasAlreadyAccepted && $proposta->status === 'aceita' && $item->is_etapa) {
-                    EtapaObra::create([
-                        'obra_id' => $proposta->obra_id,
-                        'nome' => $item->descricao,
-                        'valor' => $item->subtotal,
-                        'descricao' => 'Gerado automaticamente via Proposta',
-                        'ordem' => $item->ordem,
-                        'status' => 'pendente',
-                        'percentual_concluido' => 0,
-                    ]);
-                }
             }
+
+            $proposta->load('items');
+
+            if ($proposta->status === 'aceita') {
+                EtapaObraSyncService::syncFromProposta($proposta);
+            } elseif ($wasAlreadyAccepted && $proposta->status !== 'aceita') {
+                EtapaObra::where('obra_id', $proposta->obra_id)
+                    ->where(function ($query) {
+                        $query->whereNotNull('proposta_item_id')
+                            ->orWhere('descricao', 'Gerado automaticamente via Proposta');
+                    })
+                    ->delete();
+            }
+
+            Obra::where('id', $proposta->obra_id)->update(['encargos_padrao' => $encargos]);
         });
 
         return redirect()->route('propostas.show', $proposta)->with('success', 'Proposta atualizada com sucesso!');
@@ -166,7 +180,40 @@ class PropostaController extends Controller
     public function show(Proposta $proposta)
     {
         $proposta->load('items');
-        return view('propostas.show', compact('proposta'));
+        $items = OrdemHelper::sortCollection($proposta->items);
+        $grupos = OrdemHelper::groupPropostaItems($items);
+        $encargosResumo = PropostaCalculoService::calcularTotais(
+            $items->map(fn ($item) => [
+                'quantidade' => $item->quantidade,
+                'valor_unitario' => $item->valor_unitario,
+            ])->all(),
+            PropostaCalculoService::templateEncargos($proposta->encargos)
+        );
+
+        return view('propostas.show', compact('proposta', 'items', 'grupos', 'encargosResumo'));
+    }
+
+    public function showCliente(Proposta $proposta)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            abort(403);
+        }
+
+        if (!$user->isChefe() && !$user->obras->contains($proposta->obra_id)) {
+            abort(403, 'Você não tem permissão para acessar esta proposta.');
+        }
+
+        // Cliente só visualiza propostas aceitas (sem rascunhos internos).
+        if ($user->isClient() && $proposta->status !== 'aceita') {
+            abort(403, 'Proposta ainda não disponível para visualização do cliente.');
+        }
+
+        $proposta->load('items');
+        $items = OrdemHelper::sortCollection($proposta->items);
+        $grupos = OrdemHelper::groupPropostaItems($items);
+
+        return view('propostas.show-client', compact('proposta', 'items', 'grupos'));
     }
 
     public function import(Request $request)
@@ -284,10 +331,17 @@ class PropostaController extends Controller
             return response()->json(['items' => $items]);
 
         } catch (\Exception $e) {
-            return response()->json([
+            \Log::error('Erro ao importar proposta: ' . $e->getMessage(), ['exception' => $e]);
+
+            $payload = [
                 'error' => 'Erro ao processar arquivo: ' . $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ], 500);
+            ];
+
+            if (config('app.debug')) {
+                $payload['trace'] = $e->getTraceAsString();
+            }
+
+            return response()->json($payload, 500);
         }
     }
 

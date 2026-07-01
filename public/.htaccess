@@ -4,7 +4,13 @@ Options +FollowSymLinks
         Options -MultiViews -Indexes
     </IfModule>
 
+    # Evita redirect automático para barra final em subdiretório (HostGator/cPanel)
+    DirectorySlash Off
+
     RewriteEngine On
+
+    # Raiz do app: path relativo pode ser "" ou "/" dependendo do Apache
+    RewriteRule ^/?$ index.php [L]
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
@@ -20,7 +26,6 @@ Options +FollowSymLinks
     RewriteRule ^ %1 [L,R=301]
 
     # Send Requests To Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>

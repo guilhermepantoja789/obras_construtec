@@ -1,14 +1,30 @@
 <x-app-layout>
+    @php
+        $prazoExibicao = old('prazo_dias');
+        if ($prazoExibicao === null) {
+            $prazoExibicao = $obra->prazo_dias > 0 ? $obra->prazo_dias : '';
+        }
+
+        $prazoManualInicial = old('prazo_dias') !== null && old('prazo_dias') !== '';
+        if (! $prazoManualInicial && $obra->prazo_dias > 0) {
+            if ($obra->data_inicio && $obra->data_fim_prevista) {
+                $prazoManualInicial = (int) $obra->prazo_dias !== (int) $obra->data_inicio->diffInDays($obra->data_fim_prevista);
+            } else {
+                $prazoManualInicial = true;
+            }
+        }
+    @endphp
+
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-white leading-tight">
             {{ __('Editar Obra: ') . $obra->nome }}
         </h2>
     </x-slot>
 
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-4xl mx-auto" x-data="obraEditForm()">
         <div class="bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden shadow-2xl rounded-2xl">
             <div class="p-8">
-                <form action="{{ route('obras.update', $obra) }}" method="POST" class="space-y-6">
+                <form id="obra-edit-form" action="{{ route('obras.update', $obra) }}" method="POST" class="space-y-6" @submit="handleSubmit($event)">
                     @csrf
                     @method('PATCH')
                     
@@ -54,21 +70,27 @@
                             <x-input-error class="mt-2" :messages="$errors->get('localizacao')" />
                         </div>
 
-                        <div>
-                            <x-input-label for="data_inicio" :value="__('Data de Início')" />
-                            <x-text-input id="data_inicio" name="data_inicio" type="date" class="mt-1 block w-full" :value="old('data_inicio', $obra->data_inicio ? $obra->data_inicio->format('Y-m-d') : '')" />
-                            <x-input-error class="mt-2" :messages="$errors->get('data_inicio')" />
-                        </div>
+                        <x-date-br-input
+                            name="data_inicio"
+                            label="Data de Início"
+                            :optional="true"
+                            :value="old('data_inicio', $obra->data_inicio ? $obra->data_inicio->format('Y-m-d') : '')"
+                        />
 
-                        <div>
-                            <x-input-label for="data_fim_prevista" :value="__('Previsão de Término')" />
-                            <x-text-input id="data_fim_prevista" name="data_fim_prevista" type="date" class="mt-1 block w-full" :value="old('data_fim_prevista', $obra->data_fim_prevista ? $obra->data_fim_prevista->format('Y-m-d') : '')" />
-                            <x-input-error class="mt-2" :messages="$errors->get('data_fim_prevista')" />
-                        </div>
+                        <x-date-br-input
+                            name="data_fim_prevista"
+                            label="Previsão de Término"
+                            :optional="true"
+                            :value="old('data_fim_prevista', $obra->data_fim_prevista ? $obra->data_fim_prevista->format('Y-m-d') : '')"
+                        />
 
                         <div>
                             <x-input-label for="prazo_dias" :value="__('Prazo Total (Dias)')" />
-                            <x-text-input id="prazo_dias" name="prazo_dias" type="number" class="mt-1 block w-full" :value="old('prazo_dias', $obra->prazo_dias)" placeholder="Ex: 180" />
+                            <x-text-input id="prazo_dias" name="prazo_dias" type="number" inputmode="numeric" min="0" class="mt-1 block w-full" :value="$prazoExibicao" placeholder="Ex: 180" />
+                            <p x-show="prazoCalculado !== null && !prazoManual" x-cloak class="mt-1.5 text-[10px] text-blue-400 font-bold uppercase tracking-widest">
+                                Calculado automaticamente: <span x-text="prazoCalculado"></span> dias
+                            </p>
+                            <p class="mt-1.5 text-[10px] text-slate-600">Opcional — calculado pelas datas quando início e término estiverem preenchidos</p>
                             <x-input-error class="mt-2" :messages="$errors->get('prazo_dias')" />
                         </div>
 
@@ -127,7 +149,70 @@
         </div>
     </div>
 
+    @include('partials.date-br-script')
+
     <script>
+        function obraEditForm() {
+            return {
+                prazoManual: {{ $prazoManualInicial ? 'true' : 'false' }},
+                prazoCalculado: null,
+
+                init() {
+                    initDateBrFields(this.$root);
+                    ['data_inicio', 'data_fim_prevista'].forEach((id) => {
+                        const el = document.getElementById(id);
+                        el?.addEventListener('input', () => this.calcularPrazo());
+                        el?.addEventListener('change', () => this.calcularPrazo());
+                    });
+                    document.getElementById('prazo_dias')?.addEventListener('input', (e) => {
+                        this.prazoManual = e.target.value !== '';
+                    });
+                    this.calcularPrazo();
+                },
+
+                handleSubmit(event) {
+                    const result = prepareDateBrFieldsForSubmit(event.target);
+                    if (!result.ok) {
+                        event.preventDefault();
+                        result.input.focus();
+                        alert('Informe uma data válida no formato DD/MM/AAAA.');
+                    }
+                },
+
+                calcularPrazo() {
+                    if (this.prazoManual) return;
+
+                    const inicioEl = document.getElementById('data_inicio');
+                    const fimEl = document.getElementById('data_fim_prevista');
+                    const prazoEl = document.getElementById('prazo_dias');
+                    const inicio = readDateFieldValue(inicioEl);
+                    const fim = readDateFieldValue(fimEl);
+
+                    if (inicio === null || fim === null) {
+                        return;
+                    }
+
+                    if (!inicio || !fim) {
+                        this.prazoCalculado = null;
+                        prazoEl.value = '';
+                        return;
+                    }
+
+                    const d1 = new Date(inicio + 'T00:00:00');
+                    const d2 = new Date(fim + 'T00:00:00');
+                    const diff = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+
+                    if (diff >= 0) {
+                        this.prazoCalculado = diff;
+                        prazoEl.value = diff;
+                    } else {
+                        this.prazoCalculado = null;
+                        prazoEl.value = '';
+                    }
+                },
+            };
+        }
+
         function buscarCep(valor) {
             const cep = valor.replace(/\D/g, '');
             if (cep.length !== 8) return;

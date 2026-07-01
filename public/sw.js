@@ -1,6 +1,11 @@
-const CACHE_NAME = 'diario-obras-v4';
-const OFFLINE_URL = '/offline';
+const CACHE_NAME = 'diario-obras-v9';
+const OFFLINE_URL = 'offline';
 const SYNC_TAG = 'sync-diario-posts';
+
+// URLs relativas ao diretório do SW (compatível com deploy em subdiretório)
+const apiUrl = (path) => new URL(path, self.location).href;
+const appRootUrl = () => new URL('./', self.location.href).href;
+const isWithinAppScope = (url) => url.startsWith(appRootUrl());
 
 // ==========================================
 // INSTALL: Cache static assets + offline page
@@ -8,10 +13,7 @@ const SYNC_TAG = 'sync-diario-posts';
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll([
-                OFFLINE_URL,
-                '/',
-            ]);
+            return cache.add(OFFLINE_URL);
         })
     );
     self.skipWaiting();
@@ -48,11 +50,17 @@ self.addEventListener('message', (event) => {
 // FETCH: Serve from cache or network
 // ==========================================
 self.addEventListener('fetch', (event) => {
-    if (event.request.mode === 'navigate') {
-        event.respondWith(
-            fetch(event.request).catch(() => caches.match(OFFLINE_URL))
-        );
+    if (event.request.mode !== 'navigate') {
+        return;
     }
+
+    if (!isWithinAppScope(event.request.url)) {
+        return;
+    }
+
+    event.respondWith(
+        fetch(event.request).catch(() => caches.match(OFFLINE_URL))
+    );
 });
 
 // ==========================================
@@ -73,7 +81,7 @@ async function syncPendingPosts() {
     // 1. Fetch a fresh CSRF token using the existing session cookie
     let freshToken = null;
     try {
-        const tokenResponse = await fetch('/csrf-token', { credentials: 'include' });
+        const tokenResponse = await fetch(apiUrl('csrf-token'), { credentials: 'include' });
         if (tokenResponse.ok) {
             const json = await tokenResponse.json();
             freshToken = json.token;
@@ -84,17 +92,26 @@ async function syncPendingPosts() {
 
     for (const post of posts) {
         try {
-            const formData = new FormData();
-            formData.append('texto', post.texto);
-            // Use fresh token if available, else fall back to stored token
-            formData.append('_token', freshToken || post.token);
-
-            if (post.fotoBase64) {
-                const blob = base64ToBlob(post.fotoBase64, post.fotoMime);
-                formData.append('foto', blob, post.fotoName);
+            if (!post.fotoBase64) {
+                await deletePendingPost(db, post.id);
+                const clients = await self.clients.matchAll();
+                clients.forEach(client => {
+                    client.postMessage({
+                        type: 'sync-error',
+                        message: 'Publicação inválida removida da fila: foto obrigatória.',
+                    });
+                });
+                continue;
             }
 
-            const response = await fetch('/diario-posts', {
+            const formData = new FormData();
+            formData.append('texto', post.texto || '');
+            formData.append('_token', freshToken || post.token);
+
+            const blob = base64ToBlob(post.fotoBase64, post.fotoMime);
+            formData.append('foto', blob, post.fotoName);
+
+            const response = await fetch(apiUrl('diario-posts'), {
                 method: 'POST',
                 body: formData,
                 credentials: 'include',
@@ -106,6 +123,15 @@ async function syncPendingPosts() {
                 const clients = await self.clients.matchAll();
                 clients.forEach(client => {
                     client.postMessage({ type: 'sync-success', postId: post.id });
+                });
+            } else if (response.status === 422) {
+                await deletePendingPost(db, post.id);
+                const clients = await self.clients.matchAll();
+                clients.forEach(client => {
+                    client.postMessage({
+                        type: 'sync-error',
+                        message: 'Publicação inválida removida da fila: foto obrigatória.',
+                    });
                 });
             } else {
                 console.error('Sync failed with status:', response.status);

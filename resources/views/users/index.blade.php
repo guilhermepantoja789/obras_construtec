@@ -49,10 +49,8 @@
                         </div>
                     </div>
                     <span class="px-2 py-0.5 text-[9px] font-bold uppercase rounded-md tracking-wider
-                        @if($user->role === 'chefe') bg-purple-500/20 text-purple-400 border border-purple-500/30
-                        @elseif($user->role === 'operador') bg-blue-500/20 text-blue-400 border border-blue-500/30
-                        @else bg-green-500/20 text-green-400 border border-green-500/30 @endif">
-                        {{ $user->role }}
+                        {{ $user->role === 'operador' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-green-500/20 text-green-400 border border-green-500/30' }}">
+                        {{ $user->role === 'operador' ? 'operador' : 'cliente' }}
                     </span>
                 </div>
                 
@@ -108,10 +106,8 @@
                         </td>
                         <td class="py-4 px-6">
                             <span class="px-2 py-1 text-[10px] font-bold uppercase rounded-md tracking-wider
-                                @if($user->role === 'chefe') bg-purple-500/20 text-purple-400 border border-purple-500/30
-                                @elseif($user->role === 'operador') bg-blue-500/20 text-blue-400 border border-blue-500/30
-                                @else bg-green-500/20 text-green-400 border border-green-500/30 @endif">
-                                {{ $user->role }}
+                                {{ $user->role === 'operador' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-green-500/20 text-green-400 border border-green-500/30' }}">
+                                {{ $user->role === 'operador' ? 'operador' : 'cliente' }}
                             </span>
                         </td>
                         <td class="py-4 px-6">

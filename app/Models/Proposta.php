@@ -12,12 +12,17 @@ class Proposta extends Model
         'escopo',
         'data_proposta',
         'valor_total',
+        'subtotal_itens',
+        'encargos',
         'status',
         'arquivo_path',
     ];
 
     protected $casts = [
         'data_proposta' => 'date',
+        'subtotal_itens' => 'decimal:2',
+        'valor_total' => 'decimal:2',
+        'encargos' => 'array',
     ];
 
     public function items()

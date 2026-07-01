@@ -196,4 +196,79 @@
             </div>
         @endif
     </div>
+
+    <x-slot name="modals">
+        <!-- Modal Nova Nota (Clean & Reliable) -->
+        <x-modal name="add-nota-modal" :show="$errors->hasAny(['numero_nota', 'descricao', 'valor', 'data_recebimento', 'quem_recebeu', 'arquivo', 'observacao'])">
+            <div class="bg-slate-900 min-h-[300px]">
+                <div class="p-6 sm:p-10">
+                    <div class="flex items-start justify-between mb-8 gap-4">
+                        <div class="flex items-center gap-3 sm:gap-4">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-500 border border-indigo-500/20 shrink-0">
+                                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            </div>
+                            <div>
+                                <h2 class="text-lg sm:text-xl font-black text-white uppercase tracking-tight leading-tight">Nova Nota Fiscal</h2>
+                                <p class="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Detalhes do documento</p>
+                            </div>
+                        </div>
+                        <button @click="$dispatch('close-modal', 'add-nota-modal')" class="p-2 text-slate-500 hover:text-white transition-colors bg-white/5 rounded-xl shrink-0">
+                            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+
+                    <form action="{{ route('nota-fiscals.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6 pb-4">
+                        @csrf
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Número da Nota</label>
+                                <input type="text" name="numero_nota" required value="{{ old('numero_nota') }}" class="w-full bg-slate-800/50 border-white/10 rounded-2xl text-white text-sm focus:border-indigo-500 focus:ring-0 py-3.5 sm:py-4 px-5">
+                            </div>
+     
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Valor Total (R$)</label>
+                                <input type="number" step="0.01" name="valor" required value="{{ old('valor') }}" class="w-full bg-slate-800/50 border-white/10 rounded-2xl text-white text-sm focus:border-indigo-500 focus:ring-0 py-3.5 sm:py-4 px-5">
+                            </div>
+     
+                            <div class="sm:col-span-2 space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Descrição</label>
+                                <input type="text" name="descricao" required value="{{ old('descricao') }}" class="w-full bg-slate-800/50 border-white/10 rounded-2xl text-white text-sm focus:border-indigo-500 focus:ring-0 py-3.5 sm:py-4 px-5">
+                            </div>
+     
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Data</label>
+                                <input type="date" name="data_recebimento" required value="{{ old('data_recebimento', date('Y-m-d')) }}" class="w-full bg-slate-800/50 border-white/10 rounded-2xl text-white text-sm focus:border-indigo-500 focus:ring-0 py-3.5 sm:py-4 px-5">
+                            </div>
+     
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Recebedor</label>
+                                <input type="text" name="quem_recebeu" required value="{{ old('quem_recebeu') }}" class="w-full bg-slate-800/50 border-white/10 rounded-2xl text-white text-sm focus:border-indigo-500 focus:ring-0 py-3.5 sm:py-4 px-5">
+                            </div>
+
+                            <div class="sm:col-span-2 space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">PDF da Nota</label>
+                                <div class="bg-slate-800/50 border-white/10 rounded-2xl p-2">
+                                    <input type="file" name="arquivo" accept="application/pdf" class="w-full text-white text-[11px] file:bg-indigo-500 file:border-none file:text-white file:text-[10px] file:font-black file:uppercase file:px-6 file:py-3 file:rounded-xl file:mr-4 file:cursor-pointer">
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-2 space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Observações</label>
+                                <textarea name="observacao" rows="3" class="w-full bg-slate-800/50 border-white/10 rounded-2xl text-white text-sm focus:border-indigo-500 focus:ring-0 p-5">{{ old('observacao') }}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-4 pt-6 sm:pt-8 mt-4 border-t border-white/5">
+                            <button type="button" @click="$dispatch('close-modal', 'add-nota-modal')" class="flex-1 px-8 py-3.5 sm:py-4 bg-white/5 hover:bg-white/10 text-slate-400 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all">
+                                Descartar
+                            </button>
+                            <button type="submit" class="flex-[2] px-8 py-3.5 sm:py-4 bg-indigo-500 hover:bg-indigo-400 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20">
+                                Salvar Nota
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </x-modal>
+    </x-slot>
 </x-app-layout>

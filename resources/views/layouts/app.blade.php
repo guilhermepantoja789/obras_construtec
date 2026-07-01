@@ -12,7 +12,7 @@
         <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @include('partials.vite-assets')
 
         <style>
             .turbo-progress-bar {
@@ -23,7 +23,7 @@
         </style>
 
         <!-- PWA -->
-        <link rel="manifest" href="{{ asset('manifest.json') }}">
+        <link rel="manifest" href="{{ route('pwa.manifest') }}">
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -211,6 +211,8 @@
                 </div>
             @endif
 
+            <x-validation-errors />
+
             <!-- Page Content -->
             <main>
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -261,7 +263,7 @@
                         </div>
 
                         <div class="space-y-2">
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Registros Fotográficos</label>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Registros Fotográficos <span class="text-amber-500">*</span></label>
                             
                             <div x-show="photoPreview" class="relative w-full aspect-video rounded-2xl overflow-hidden border border-white/10 mb-4" style="display: none;">
                                 <img :src="photoPreview" class="w-full h-full object-cover">
@@ -403,6 +405,15 @@
                             </div>
                             <span class="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Propostas</span>
                         </a>
+                        @elseif(Auth::user()->isClient())
+                        <a href="{{ $clientePropostaId ? route('propostas.cliente.show', $clientePropostaId) : '#' }}" class="flex flex-col items-center gap-2 group {{ !$clientePropostaId ? 'opacity-50 pointer-events-none' : '' }}">
+                            <div class="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500 border border-amber-500/20 group-active:scale-90 transition-transform">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Propostas</span>
+                        </a>
                         @endif
 
                         <!-- Diários (Histórico) -->
@@ -434,6 +445,18 @@
                                 </svg>
                             </div>
                             <span class="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Financeiro</span>
+                        </a>
+                        @endif
+
+                        <!-- Empreiteiras -->
+                        @if(Auth::user()->isChefe())
+                        <a href="{{ route('empreiteiras.index') }}" class="flex flex-col items-center gap-2 group">
+                            <div class="w-12 h-12 bg-orange-500/10 rounded-2xl flex items-center justify-center text-orange-500 border border-orange-500/20 group-active:scale-90 transition-transform">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Empreiteiras</span>
                         </a>
                         @endif
 
@@ -478,6 +501,10 @@
 
             <!-- Bottom Navigation (Mobile Only) -->
             <nav class="sm:hidden fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-xl border-t border-white/10 px-6 py-3 z-50 flex justify-between items-center safe-area-bottom">
+                @php
+                    $obraCountBottom = isset($availableObras) ? $availableObras->count() : 0;
+                    $showObrasMenuBottom = !Auth::user()->isClient() || $obraCountBottom > 1;
+                @endphp
                 <a href="{{ route('dashboard') }}" class="flex flex-col items-center gap-1 {{ request()->routeIs('dashboard') ? 'text-amber-500' : 'text-slate-400' }}">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
@@ -485,12 +512,14 @@
                     <span class="text-[10px] font-bold uppercase tracking-wider">Home</span>
                 </a>
 
-                <a href="{{ route('obras.index') }}" class="flex flex-col items-center gap-1 {{ request()->routeIs('obras.*') ? 'text-amber-500' : 'text-slate-400' }}">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                    </svg>
-                    <span class="text-[10px] font-bold uppercase tracking-wider">Obras</span>
-                </a>
+                @if($showObrasMenuBottom)
+                    <a href="{{ route('obras.index') }}" class="flex flex-col items-center gap-1 {{ request()->routeIs('obras.*') ? 'text-amber-500' : 'text-slate-400' }}">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Obras</span>
+                    </a>
+                @endif
 
                 <!-- Central Action Button Menu -->
                 @if(!Auth::user()->isClient())
@@ -667,6 +696,46 @@
     </body>
 
     <script>
+    // Compartilhar ou baixar anexo (PWA mobile — evita abrir doc preso no app)
+    async function shareOrDownloadFile(url, fileName, title, text) {
+        try {
+            const response = await fetch(url, { credentials: 'include' });
+            if (!response.ok) throw new Error('Falha ao carregar arquivo');
+
+            const blob = await response.blob();
+            const mime = blob.type || 'application/octet-stream';
+            const name = fileName || 'anexo';
+            const isMobile = window.matchMedia('(max-width: 640px)').matches
+                || window.navigator.standalone
+                || window.matchMedia('(display-mode: standalone)').matches;
+
+            if (isMobile && navigator.share) {
+                const file = new File([blob], name, { type: mime });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: title || name,
+                        text: text || '',
+                    });
+                    return;
+                }
+            }
+
+            const blobUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = name;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(blobUrl);
+            document.body.removeChild(a);
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                alert('Erro ao abrir anexo. Tente novamente.');
+            }
+        }
+    }
+
     // ============================================
     // OFFLINE SYNC — iOS + Android Compatible
     // ============================================
@@ -731,14 +800,20 @@
         } catch(e) {}
 
         let synced = 0;
+        let removed = 0;
         for (const post of posts) {
             try {
-                const fd = new FormData();
-                fd.append('texto', post.texto);
-                fd.append('_token', freshToken || post.token);
-                if (post.fotoBase64) {
-                    fd.append('foto', base64ToBlob(post.fotoBase64, post.fotoMime), post.fotoName);
+                if (!post.fotoBase64) {
+                    const delTx = db.transaction('pending-posts', 'readwrite');
+                    delTx.objectStore('pending-posts').delete(post.id);
+                    removed++;
+                    continue;
                 }
+
+                const fd = new FormData();
+                fd.append('texto', post.texto || '');
+                fd.append('_token', freshToken || post.token);
+                fd.append('foto', base64ToBlob(post.fotoBase64, post.fotoMime), post.fotoName);
 
                 const resp = await fetch("{{ route('diario-posts.store') }}", {
                     method: 'POST',
@@ -748,10 +823,13 @@
                 });
 
                 if (resp.ok || resp.redirected || resp.status === 302 || resp.status === 200) {
-                    // Delete from queue
                     const delTx = db.transaction('pending-posts', 'readwrite');
                     delTx.objectStore('pending-posts').delete(post.id);
                     synced++;
+                } else if (resp.status === 422) {
+                    const delTx = db.transaction('pending-posts', 'readwrite');
+                    delTx.objectStore('pending-posts').delete(post.id);
+                    removed++;
                 }
             } catch(e) {
                 console.error('Sync error for post', post.id, e);
@@ -760,6 +838,11 @@
 
         if (synced > 0) {
             showToast(`✓ ${synced} publicação(ões) enviada(s) com sucesso!`);
+        }
+        if (removed > 0) {
+            showToast('Publicação inválida removida da fila: foto obrigatória.', 'rose');
+        }
+        if (synced > 0 || removed > 0) {
             updatePendingBadge();
         }
     }
@@ -787,7 +870,10 @@
         const fileInput = document.getElementById('post-foto');
         const file = fileInput && fileInput.files[0];
 
-        if (!texto && !file) return;
+        if (!file) {
+            showToast('Selecione uma foto para publicar no diário.', 'rose');
+            return;
+        }
 
         alpineData.submitting = true;
 
@@ -795,12 +881,9 @@
             document.getElementById('diario-post-form').submit();
         } else {
             try {
-                let fotoBase64 = null, fotoMime = null, fotoName = null;
-                if (file) {
-                    fotoBase64 = await fileToBase64(file);
-                    fotoMime = file.type;
-                    fotoName = file.name;
-                }
+                const fotoBase64 = await fileToBase64(file);
+                const fotoMime = file.type;
+                const fotoName = file.name;
 
                 const db = await openOfflineDB();
                 await new Promise((res, rej) => {
@@ -869,6 +952,10 @@
         navigator.serviceWorker.addEventListener('message', (event) => {
             if (event.data?.type === 'sync-success') {
                 showToast('✓ Post sincronizado com sucesso!');
+                updatePendingBadge();
+            }
+            if (event.data?.type === 'sync-error') {
+                showToast(event.data.message || 'Erro ao sincronizar publicação.', 'rose');
                 updatePendingBadge();
             }
         });
