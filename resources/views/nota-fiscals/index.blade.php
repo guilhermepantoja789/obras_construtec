@@ -17,14 +17,73 @@
     <div class="max-w-2xl mx-auto space-y-4 pb-24 px-4" x-data="{ showCustom: {{ $periodoAtivo === 'custom' ? 'true' : 'false' }} }">
 
         {{-- Hero: resumo do período --}}
-        <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl overflow-hidden relative">
+        <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl overflow-hidden relative" x-data="{
+            isGenerating: false,
+            async downloadPdf() {
+                if (this.isGenerating) return;
+                this.isGenerating = true;
+
+                try {
+                    const response = await fetch('{{ route('nota-fiscals.pdf', request()->query()) }}');
+                    if (!response.ok) throw new Error('Falha ao gerar PDF');
+
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const fileName = 'notas-fiscais-obra-{{ $obra->id }}-{{ $dataInicio->format('Y-m-d') }}-{{ $dataFim->format('Y-m-d') }}.pdf';
+
+                    if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], fileName, { type: 'application/pdf' })] })) {
+                        const file = new File([blob], fileName, { type: 'application/pdf' });
+                        await navigator.share({
+                            files: [file],
+                            title: 'Notas Fiscais',
+                            text: 'Relatório de notas fiscais da obra {{ $obra->nome }}'
+                        });
+                    } else {
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = fileName;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                    }
+                } catch (error) {
+                    alert('Erro ao gerar PDF. Tente novamente.');
+                } finally {
+                    this.isGenerating = false;
+                }
+            }
+        }">
             <div class="absolute -right-8 -top-8 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl"></div>
 
             <div class="relative z-10">
-                <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Período</p>
-                <p class="text-sm font-bold text-slate-400 mb-4">
-                    {{ $dataInicio->format('d/m') }} – {{ $dataFim->format('d/m/Y') }}
-                </p>
+                <div class="flex items-start justify-between gap-3 mb-4">
+                    <div>
+                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Período</p>
+                        <p class="text-sm font-bold text-slate-400">
+                            {{ $dataInicio->format('d/m') }} – {{ $dataFim->format('d/m/Y') }}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        @click="downloadPdf()"
+                        :disabled="isGenerating"
+                        class="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30 rounded-xl text-[10px] font-black uppercase tracking-widest text-indigo-300 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                        <template x-if="!isGenerating">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                <span>Exportar PDF</span>
+                            </div>
+                        </template>
+                        <template x-if="isGenerating">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                <span>Gerando...</span>
+                            </div>
+                        </template>
+                    </button>
+                </div>
 
                 <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Valor Total</p>
                 <h3 class="text-4xl font-black text-white leading-none mb-4">

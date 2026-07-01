@@ -76,6 +76,7 @@ Route::middleware('auth')->group(function () {
 
     // Chefe & Operador
     Route::middleware('role:chefe,operador')->group(function () {
+        Route::get('nota-fiscals/export/pdf', [\App\Http\Controllers\NotaFiscalController::class, 'exportPdf'])->name('nota-fiscals.pdf');
         Route::resource('diario-posts', \App\Http\Controllers\DiarioPostController::class)->only(['store', 'destroy']);
         Route::resource('nota-fiscals', \App\Http\Controllers\NotaFiscalController::class);
     });

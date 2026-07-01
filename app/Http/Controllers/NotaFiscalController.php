@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\NotaFiscal;
 use App\Models\Obra;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
 class NotaFiscalController extends Controller
@@ -27,11 +29,7 @@ class NotaFiscalController extends Controller
             'data_fim' => $periodoAtivo === 'custom' ? $dataFim->toDateString() : null,
         ]]);
 
-        $notas = NotaFiscal::where('obra_id', $obraId)
-            ->whereDate('data_recebimento', '>=', $dataInicio)
-            ->whereDate('data_recebimento', '<=', $dataFim)
-            ->orderBy('data_recebimento', 'desc')
-            ->get();
+        $notas = $this->getNotasDoPeriodo($obraId, $dataInicio, $dataFim);
 
         $totalValor = $notas->sum('valor');
         $totalCount = $notas->count();
@@ -80,6 +78,50 @@ class NotaFiscalController extends Controller
             ->with('success', 'Nota fiscal registrada com sucesso!');
     }
 
+    public function exportPdf(Request $request)
+    {
+        $obraId = session('active_obra_id');
+        if (!$obraId) {
+            return redirect()->route('obras.index')->with('error', 'Selecione uma obra primeiro.');
+        }
+
+        $obra = Obra::findOrFail($obraId);
+
+        [$periodoAtivo, $dataInicio, $dataFim] = $this->resolvePeriod($request);
+
+        $notas = $this->getNotasDoPeriodo($obraId, $dataInicio, $dataFim);
+        $totalValor = $notas->sum('valor');
+        $totalCount = $notas->count();
+        $periodoLabel = $this->periodoLabel($periodoAtivo);
+        $emitidoEm = Carbon::now();
+
+        $pdf = Pdf::loadView('nota-fiscals.pdf', compact(
+            'obra',
+            'notas',
+            'totalValor',
+            'totalCount',
+            'dataInicio',
+            'dataFim',
+            'periodoLabel',
+            'emitidoEm',
+        ))
+            ->setPaper('a4', 'portrait')
+            ->setOptions(['defaultFont' => 'sans-serif', 'isRemoteEnabled' => true, 'isHtml5ParserEnabled' => true]);
+
+        $filename = 'notas-fiscais-obra-' . $obra->id . '-' . $dataInicio->format('Y-m-d') . '-' . $dataFim->format('Y-m-d') . '.pdf';
+
+        $pdfContent = $pdf->output();
+
+        return response($pdfContent, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Length' => strlen($pdfContent),
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
+    }
+
     public function destroy(NotaFiscal $notaFiscal)
     {
         if ($notaFiscal->arquivo_path) {
@@ -90,6 +132,25 @@ class NotaFiscalController extends Controller
 
         return redirect()->route('nota-fiscals.index', $this->filterParams())
             ->with('success', 'Nota fiscal removida com sucesso!');
+    }
+
+    private function getNotasDoPeriodo(int $obraId, Carbon $dataInicio, Carbon $dataFim): Collection
+    {
+        return NotaFiscal::where('obra_id', $obraId)
+            ->whereDate('data_recebimento', '>=', $dataInicio)
+            ->whereDate('data_recebimento', '<=', $dataFim)
+            ->orderBy('data_recebimento', 'desc')
+            ->get();
+    }
+
+    private function periodoLabel(string $periodo): string
+    {
+        return match ($periodo) {
+            'mes_anterior' => 'Mês anterior',
+            'ultimos_30' => 'Últimos 30 dias',
+            'custom' => 'Personalizado',
+            default => 'Este mês',
+        };
     }
 
     private function resolvePeriod(Request $request): array
