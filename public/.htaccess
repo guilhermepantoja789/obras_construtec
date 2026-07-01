@@ -4,9 +4,6 @@ Options +FollowSymLinks
         Options -MultiViews -Indexes
     </IfModule>
 
-    # Evita redirect automático para barra final em subdiretório (HostGator/cPanel)
-    DirectorySlash Off
-
     RewriteEngine On
 
     # Raiz do app: path relativo pode ser "" ou "/" dependendo do Apache

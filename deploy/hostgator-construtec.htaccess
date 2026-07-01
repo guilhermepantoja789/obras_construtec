@@ -1,0 +1,6 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Sem barra final, o HostGator pode retornar 403 no symlink diario_obras
+    RewriteRule ^diario_obras$ diario_obras/ [R=301,L]
+</IfModule>

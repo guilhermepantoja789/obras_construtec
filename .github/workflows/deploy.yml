@@ -72,9 +72,15 @@ jobs:
           rm -rf public/storage
           cd public && ln -s ../storage/app/public storage && cd ..
           mkdir -p ~/public_html/construtec/
+          cp deploy/hostgator-construtec.htaccess ~/public_html/construtec/.htaccess
           ln -snf ~/diario_obras_core/public/ ~/public_html/construtec/diario_obras/
           if [ -f ~/public_html/.htaccess ] && ! grep -q "construtec/diario_obras" ~/public_html/.htaccess; then
             echo "WARNING: ~/public_html/.htaccess sem regra de exceção para construtec/diario_obras"
             echo "Adicione regra para não redirecionar esse path para g2mhome/public."
+          fi
+          STATUS_NO_SLASH=$(curl -s -o /dev/null -w "%{http_code}" "https://gdoism.com.br/construtec/diario_obras")
+          if [ "$STATUS_NO_SLASH" = "403" ]; then
+            echo "ERRO: /construtec/diario_obras retorna 403 (verifique .htaccess do HostGator)"
+            exit 1
           fi
         EOF
