@@ -122,8 +122,30 @@ class NotaFiscalController extends Controller
         ]);
     }
 
+    public function update(Request $request, NotaFiscal $notaFiscal)
+    {
+        $obraId = session('active_obra_id');
+        if (!$obraId || $notaFiscal->obra_id != $obraId) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'data_recebimento' => 'required|date',
+        ]);
+
+        $notaFiscal->update($validated);
+
+        return redirect()->route('nota-fiscals.index', $this->filterParams())
+            ->with('success', 'Data da nota fiscal atualizada com sucesso!');
+    }
+
     public function destroy(NotaFiscal $notaFiscal)
     {
+        $obraId = session('active_obra_id');
+        if (!$obraId || $notaFiscal->obra_id != $obraId) {
+            abort(403);
+        }
+
         if ($notaFiscal->arquivo_path) {
             Storage::disk('public')->delete($notaFiscal->arquivo_path);
         }

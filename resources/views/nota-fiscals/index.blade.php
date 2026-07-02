@@ -239,12 +239,25 @@
                                         </a>
                                     @endif
 
+                                    <button
+                                        type="button"
+                                        @click="$dispatch('edit-nota-date', {
+                                            id: {{ $nota->id }},
+                                            numero: @js($nota->numero_nota),
+                                            descricao: @js($nota->descricao),
+                                            data: @js($nota->data_recebimento->format('Y-m-d'))
+                                        }); $dispatch('open-modal', 'edit-nota-date-modal')"
+                                        class="flex items-center gap-1.5 px-3 py-2 bg-white/5 text-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-transform"
+                                    >
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        Alterar data
+                                    </button>
+
                                     <form action="{{ route('nota-fiscals.destroy', $nota) }}" method="POST" class="ml-auto" onsubmit="return confirm('Tem certeza que deseja excluir esta nota?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="flex items-center gap-1.5 px-3 py-2 bg-rose-500/10 text-rose-500 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-transform">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                            Excluir
                                         </button>
                                     </form>
                                 </div>
@@ -257,8 +270,81 @@
     </div>
 
     <x-slot name="modals">
+        @php
+            $pendingEditNota = old('nota_id') ? $notas->firstWhere('id', (int) old('nota_id')) : null;
+        @endphp
+
+        <!-- Modal Alterar Data -->
+        <x-modal name="edit-nota-date-modal" :show="$errors->has('data_recebimento') && old('nota_id')">
+            <div
+                class="bg-slate-900 min-h-[200px]"
+                x-data="{
+                    editingNota: @js($pendingEditNota ? [
+                        'id' => $pendingEditNota->id,
+                        'numero' => $pendingEditNota->numero_nota,
+                        'descricao' => $pendingEditNota->descricao,
+                        'data' => old('data_recebimento', $pendingEditNota->data_recebimento->format('Y-m-d')),
+                    ] : null)
+                }"
+                x-on:edit-nota-date.window="editingNota = $event.detail"
+            >
+                <div class="p-6 sm:p-10">
+                    <div class="flex items-start justify-between mb-8 gap-4">
+                        <div class="flex items-center gap-3 sm:gap-4">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-500 border border-indigo-500/20 shrink-0">
+                                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            </div>
+                            <div>
+                                <h2 class="text-lg sm:text-xl font-black text-white uppercase tracking-tight leading-tight">Alterar Data</h2>
+                                <p class="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5" x-show="editingNota" x-text="'Nº ' + (editingNota?.numero ?? '')"></p>
+                            </div>
+                        </div>
+                        <button @click="$dispatch('close-modal', 'edit-nota-date-modal')" class="p-2 text-slate-500 hover:text-white transition-colors bg-white/5 rounded-xl shrink-0">
+                            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+
+                    <template x-if="editingNota">
+                        <form :action="`{{ url('nota-fiscals') }}/${editingNota.id}`" method="POST" class="space-y-6 pb-4">
+                            @csrf
+                            @method('PUT')
+                            <input type="hidden" name="nota_id" :value="editingNota.id">
+
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Nota</label>
+                                <p class="text-sm font-bold text-white px-1" x-text="editingNota.descricao"></p>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Data de Recebimento</label>
+                                <input
+                                    type="date"
+                                    name="data_recebimento"
+                                    required
+                                    x-model="editingNota.data"
+                                    class="w-full bg-slate-800/50 border-white/10 rounded-2xl text-white text-sm focus:border-indigo-500 focus:ring-0 py-3.5 sm:py-4 px-5 [color-scheme:dark]"
+                                >
+                                @error('data_recebimento')
+                                    <p class="text-xs text-rose-400 mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row gap-4 pt-6 sm:pt-8 mt-4 border-t border-white/5">
+                                <button type="button" @click="$dispatch('close-modal', 'edit-nota-date-modal')" class="flex-1 px-8 py-3.5 sm:py-4 bg-white/5 hover:bg-white/10 text-slate-400 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all">
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="flex-[2] px-8 py-3.5 sm:py-4 bg-indigo-500 hover:bg-indigo-400 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20">
+                                    Salvar Data
+                                </button>
+                            </div>
+                        </form>
+                    </template>
+                </div>
+            </div>
+        </x-modal>
+
         <!-- Modal Nova Nota (Clean & Reliable) -->
-        <x-modal name="add-nota-modal" :show="$errors->hasAny(['numero_nota', 'descricao', 'valor', 'data_recebimento', 'quem_recebeu', 'arquivo', 'observacao'])">
+        <x-modal name="add-nota-modal" :show="$errors->hasAny(['numero_nota', 'descricao', 'valor', 'quem_recebeu', 'arquivo', 'observacao']) || ($errors->has('data_recebimento') && !old('nota_id'))">
             <div class="bg-slate-900 min-h-[300px]">
                 <div class="p-6 sm:p-10">
                     <div class="flex items-start justify-between mb-8 gap-4">

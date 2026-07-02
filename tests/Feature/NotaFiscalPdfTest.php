@@ -4,7 +4,7 @@ use App\Models\NotaFiscal;
 use App\Models\Obra;
 use App\Models\User;
 
-function operadorComObraAtiva(): array
+function operadorComObraAtivaParaNotaFiscal(): array
 {
     $operador = User::factory()->create(['role' => 'operador']);
     $obra = Obra::create(['nome' => 'Obra NF', 'status' => 'em_andamento']);
@@ -13,7 +13,7 @@ function operadorComObraAtiva(): array
 }
 
 test('operador exporta pdf de notas fiscais do periodo', function () {
-    [$operador, $obra] = operadorComObraAtiva();
+    [$operador, $obra] = operadorComObraAtivaParaNotaFiscal();
 
     NotaFiscal::create([
         'obra_id' => $obra->id,
@@ -50,4 +50,50 @@ test('exportacao pdf redireciona sem obra ativa', function () {
     $this->actingAs($operador)
         ->get(route('nota-fiscals.pdf'))
         ->assertRedirect(route('obras.index'));
+});
+
+test('operador altera data de nota fiscal', function () {
+    [$operador, $obra] = operadorComObraAtivaParaNotaFiscal();
+
+    $nota = NotaFiscal::create([
+        'obra_id' => $obra->id,
+        'numero_nota' => '99999',
+        'descricao' => 'Ferragens',
+        'valor' => 800.00,
+        'quem_recebeu' => 'Maria',
+        'data_recebimento' => now()->subMonths(2)->toDateString(),
+        'observacao' => null,
+    ]);
+
+    $novaData = now()->subMonth()->toDateString();
+
+    $this->actingAs($operador)
+        ->withSession(['active_obra_id' => $obra->id])
+        ->put(route('nota-fiscals.update', $nota), [
+            'data_recebimento' => $novaData,
+        ])
+        ->assertRedirect(route('nota-fiscals.index'));
+
+    expect($nota->fresh()->data_recebimento->toDateString())->toBe($novaData);
+});
+
+test('operador nao altera nota fiscal de outra obra', function () {
+    [$operador, $obra] = operadorComObraAtivaParaNotaFiscal();
+    $outraObra = Obra::create(['nome' => 'Outra Obra', 'status' => 'em_andamento']);
+
+    $nota = NotaFiscal::create([
+        'obra_id' => $outraObra->id,
+        'numero_nota' => '11111',
+        'descricao' => 'Tinta',
+        'valor' => 200.00,
+        'quem_recebeu' => 'Pedro',
+        'data_recebimento' => now()->toDateString(),
+    ]);
+
+    $this->actingAs($operador)
+        ->withSession(['active_obra_id' => $obra->id])
+        ->put(route('nota-fiscals.update', $nota), [
+            'data_recebimento' => now()->subWeek()->toDateString(),
+        ])
+        ->assertForbidden();
 });
