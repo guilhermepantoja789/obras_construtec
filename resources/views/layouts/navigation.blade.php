@@ -71,7 +71,7 @@
                 @endif
 
                 <!-- Navigation Links -->
-                <div class="hidden space-x-4 lg:space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                <div class="hidden space-x-4 lg:space-x-8 lg:-my-px lg:ms-10 lg:flex">
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-slate-400 hover:text-white border-transparent hover:border-amber-500 transition-all">
                         {{ __('Dashboard') }}
                     </x-nav-link>
@@ -114,8 +114,34 @@
                 </div>
             </div>
 
-            <!-- Geral Menu Trigger (Desktop) -->
-            <div class="hidden sm:flex items-center ms-4">
+            <!-- Novo (Desktop / tablet): diário e nota, equivalente ao FAB mobile -->
+            @if(!Auth::user()->isClient())
+            <div class="hidden sm:flex items-center ms-3 relative" @click.outside="openNovo = false">
+                <button type="button" @click="openNovo = !openNovo"
+                        class="inline-flex items-center gap-1.5 px-3 py-2 min-h-11 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors"
+                        :class="openNovo ? 'bg-amber-400' : ''">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Novo
+                </button>
+                <div x-show="openNovo"
+                     x-cloak
+                     class="absolute right-0 top-full mt-2 w-52 bg-slate-800 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
+                    <button type="button" @click="openNovo = false; showCreatePostModal = true"
+                            class="w-full text-left px-4 py-3 text-sm text-slate-200 hover:bg-amber-500/10 hover:text-amber-400 transition-colors">
+                        Registro do diário
+                    </button>
+                    <button type="button" @click="openNovo = false; showNotaModal = true"
+                            class="w-full text-left px-4 py-3 text-sm text-slate-200 hover:bg-indigo-500/10 hover:text-indigo-400 transition-colors border-t border-white/5">
+                        Nota fiscal
+                    </button>
+                </div>
+            </div>
+            @endif
+
+            <!-- Geral Menu Trigger (tablet overflow; no desktop os links já aparecem) -->
+            <div class="hidden sm:flex lg:hidden items-center ms-2">
                 <button @click="showGeneralMenu = !showGeneralMenu" 
                         class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors border border-transparent hover:border-white/10 flex items-center gap-2 group"
                         :class="showGeneralMenu ? 'text-amber-500 bg-white/5 border-white/10' : ''">
@@ -143,7 +169,7 @@
                             <p class="text-sm font-bold text-white truncate">{{ Auth::user()->name }}</p>
                         </div>
 
-                        <x-dropdown-link :href="route('profile.edit')" class="dark:hover:bg-amber-500/10 dark:hover:text-amber-500">
+                        <x-dropdown-link :href="route('profile.edit')">
                             {{ __('Configurações') }}
                         </x-dropdown-link>
 
@@ -153,7 +179,7 @@
                             <x-dropdown-link :href="route('logout')"
                                     onclick="event.preventDefault();
                                                 this.closest('form').submit();"
-                                    class="dark:hover:bg-red-500/10 dark:hover:text-red-500">
+                                    class="hover:bg-red-500/10 hover:text-red-400">
                                 {{ __('Sair') }}
                             </x-dropdown-link>
                         </form>

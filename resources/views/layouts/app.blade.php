@@ -2,7 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Diário de Obras') }}</title>
@@ -186,7 +186,7 @@
     <body class="font-sans text-slate-200 antialiased bg-slate-900 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] relative overflow-x-hidden">
         <div class="fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-900/95 to-slate-800 -z-10"></div>
         
-        <div class="min-h-screen pb-20 sm:pb-0 safe-area-bottom" x-data="{ showGeneralMenu: false, showCreatePostModal: false, showActionMenu: false, showNotaModal: false }">
+        <div class="min-h-screen pb-20 sm:pb-0 safe-area-bottom" x-data="{ showGeneralMenu: false, showCreatePostModal: false, showActionMenu: false, showNotaModal: false, openNovo: false }">
 
             @include('layouts.navigation')
 

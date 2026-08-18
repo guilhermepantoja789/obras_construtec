@@ -28,12 +28,6 @@
         </form>
     </div>
 
-    @if(session('success'))
-        <div class="mb-6 p-4 bg-green-500/10 border border-green-500/50 rounded-2xl text-green-500 text-sm backdrop-blur-xl">
-            {{ session('success') }}
-        </div>
-    @endif
-
     <!-- Versão Mobile: Cards -->
     <div class="grid grid-cols-1 gap-4 sm:hidden">
         @forelse($users as $user)

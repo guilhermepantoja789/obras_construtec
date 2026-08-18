@@ -159,7 +159,7 @@
                     @if($post->foto_path)
                         <div class="relative aspect-square sm:aspect-video bg-slate-900 overflow-hidden cursor-pointer group/img" 
                              @click="showLightbox = true; lightboxImage = '{{ asset('storage/' . $post->foto_path) }}'; lightboxText = '{{ addslashes(str_replace(["\r", "\n"], ' ', $post->texto)) }}'">
-                            <img src="{{ asset('storage/' . $post->foto_path) }}" alt="Foto da obra" class="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-110">
+                            <img src="{{ asset('storage/' . $post->foto_path) }}" alt="Foto da obra" class="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-110" loading="lazy">
                             <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity flex items-end p-6">
                                 <div class="flex items-center gap-2 text-white text-[10px] font-black uppercase tracking-widest">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

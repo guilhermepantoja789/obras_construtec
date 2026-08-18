@@ -18,7 +18,7 @@ class ObraController extends Controller
             });
         }
 
-        $obras = $query->get();
+        $obras = $query->paginate(24)->withQueryString();
         $chefesCount = \App\Models\User::where('role', 'chefe')->count();
         return view('obras.index', compact('obras', 'chefesCount'));
     }
@@ -45,8 +45,8 @@ class ObraController extends Controller
             abort(403);
         }
 
-        $obra->load(['users', 'diarioPosts', 'etapas', 'propostas', 'diarioReports' => function($query) {
-            $query->orderBy('data_relatorio', 'desc');
+        $obra->load(['users', 'propostas', 'diarioReports' => function ($query) {
+            $query->orderBy('data_relatorio', 'desc')->limit(20);
         }]);
         $chefes = \App\Models\User::where('role', 'chefe')->get();
         

@@ -21,30 +21,25 @@ class SetObraContext
             $user = auth()->user();
             $obraId = session('active_obra_id');
 
+            $availableObras = $user->isChefe()
+                ? Obra::query()->select('id', 'nome', 'status')->orderBy('nome')->get()
+                : $user->obras()->select('obras.id', 'obras.nome', 'obras.status')->orderBy('obras.nome')->get();
+
             // Se não houver obra na sessão, tenta pegar a primeira disponível
-            if (!$obraId) {
-                $firstObra = $user->isChefe() 
-                    ? Obra::first() 
-                    : $user->obras()->first();
-                
-                if ($firstObra) {
-                    session(['active_obra_id' => $firstObra->id]);
-                    $obraId = $firstObra->id;
-                }
+            if (!$obraId && $availableObras->isNotEmpty()) {
+                $obraId = $availableObras->first()->id;
+                session(['active_obra_id' => $obraId]);
             }
 
             if ($obraId) {
                 $activeObra = Obra::find($obraId);
-                // Verifica se o usuário ainda tem acesso a essa obra
-                if ($activeObra && ($user->isChefe() || $user->obras->contains($activeObra->id))) {
+                if ($activeObra && ($user->isChefe() || $availableObras->contains('id', $activeObra->id))) {
                     View::share('activeObra', $activeObra);
                 } else {
                     session()->forget('active_obra_id');
                 }
             }
 
-            // Disponibiliza as obras disponíveis para o seletor
-            $availableObras = $user->isChefe() ? Obra::all() : $user->obras;
             View::share('availableObras', $availableObras);
         }
 

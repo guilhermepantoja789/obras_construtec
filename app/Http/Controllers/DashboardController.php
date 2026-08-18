@@ -5,11 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Obra;
 use App\Models\DespesaObra;
 use App\Models\DiarioPost;
-use App\Models\EtapaObra;
-use App\Models\User;
 use App\Services\EtapaObraSyncService;
 use App\Support\OrdemHelper;
-use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -30,10 +27,10 @@ class DashboardController extends Controller
         $stats = [
             'total_posts' => DiarioPost::where('obra_id', $obraId)->count(),
             'today_posts' => DiarioPost::where('obra_id', $obraId)->whereDate('data_postagem', Carbon::today())->count(),
-            'equipe_count' => $obra->users()->count(),
+            'equipe_count' => $obra->users->count(),
             'progresso_geral' => EtapaObraSyncService::calcularProgressoPonderado($etapas),
-            'etapas_concluidas' => $obra->etapas()->where('status', 'concluida')->count(),
-            'total_etapas' => $obra->etapas()->count(),
+            'etapas_concluidas' => $etapas->where('status', 'concluida')->count(),
+            'total_etapas' => $etapas->count(),
         ];
 
         // Financeiro simplificado
@@ -53,7 +50,7 @@ class DashboardController extends Controller
 
         // Próximas etapas (não concluídas)
         $proximas_etapas = OrdemHelper::sortCollection(
-            $obra->etapas()->where('status', '!=', 'concluida')->get()
+            $etapas->where('status', '!=', 'concluida')
         )->take(3);
 
         // Posts recentes

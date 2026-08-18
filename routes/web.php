@@ -11,14 +11,28 @@ Route::match(['GET', 'HEAD'], '/', RootRedirectController::class)->name('root');
 
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+Route::middleware('auth')
+    ->whereNumber([
+        'obra',
+        'proposta',
+        'empreiteira',
+        'diarioReport',
+        'pagamento',
+        'despesaObra',
+        'anexo',
+        'etapa_obra',
+        'diario_post',
+        'nota_fiscal',
+        'user',
+    ])
+    ->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('obras', [\App\Http\Controllers\ObraController::class, 'index'])->name('obras.index');
-    Route::get('obras/{obra}', [\App\Http\Controllers\ObraController::class, 'show'])->name('obras.show');
 
+    // create/store antes de {obra} para evitar conflito de rota
     Route::middleware('role:chefe')->group(function () {
         Route::get('obras/create', [\App\Http\Controllers\ObraController::class, 'create'])->name('obras.create');
         Route::post('obras', [\App\Http\Controllers\ObraController::class, 'store'])->name('obras.store');
@@ -26,6 +40,8 @@ Route::middleware('auth')->group(function () {
         Route::match(['put', 'patch'], 'obras/{obra}', [\App\Http\Controllers\ObraController::class, 'update'])->name('obras.update');
         Route::delete('obras/{obra}', [\App\Http\Controllers\ObraController::class, 'destroy'])->name('obras.destroy');
     });
+
+    Route::get('obras/{obra}', [\App\Http\Controllers\ObraController::class, 'show'])->name('obras.show');
 
     // Public/All roles (View only or basic access)
     Route::get('/feed', [\App\Http\Controllers\FeedController::class, 'index'])->name('feed.index');
@@ -48,11 +64,11 @@ Route::middleware('auth')->group(function () {
     // Chefe Only
     Route::middleware('role:chefe')->group(function () {
         Route::resource('users', \App\Http\Controllers\UserController::class)->except(['show']);
-        Route::resource('propostas', \App\Http\Controllers\PropostaController::class);
         Route::post('propostas/import', [\App\Http\Controllers\PropostaController::class, 'import'])->name('propostas.import');
+        Route::resource('propostas', \App\Http\Controllers\PropostaController::class);
         Route::get('empreiteiras', [\App\Http\Controllers\EmpreiteiraController::class, 'index'])->name('empreiteiras.index');
-        Route::get('empreiteiras/{empreiteira}', [\App\Http\Controllers\EmpreiteiraController::class, 'show'])->name('empreiteiras.show');
         Route::post('empreiteiras', [\App\Http\Controllers\EmpreiteiraController::class, 'store'])->name('empreiteiras.store');
+        Route::get('empreiteiras/{empreiteira}', [\App\Http\Controllers\EmpreiteiraController::class, 'show'])->name('empreiteiras.show');
         Route::match(['put', 'patch'], 'empreiteiras/{empreiteira}', [\App\Http\Controllers\EmpreiteiraController::class, 'update'])->name('empreiteiras.update');
         Route::delete('empreiteiras/{empreiteira}', [\App\Http\Controllers\EmpreiteiraController::class, 'destroy'])->name('empreiteiras.destroy');
         Route::get('financeiro', [\App\Http\Controllers\FinanceiroController::class, 'index'])->name('financeiro.index');
@@ -66,9 +82,9 @@ Route::middleware('auth')->group(function () {
         Route::get('obras/{obra}/contrato', [\App\Http\Controllers\ContratoController::class, 'edit'])->name('contrato.edit');
         Route::put('obras/{obra}/contrato', [\App\Http\Controllers\ContratoController::class, 'update'])->name('contrato.update');
         Route::get('obras/{obra}/contrato/pdf', [\App\Http\Controllers\ContratoController::class, 'pdf'])->name('contrato.pdf');
-        Route::resource('etapa-obras', \App\Http\Controllers\EtapaObraController::class)->except(['index']);
         Route::post('etapa-obras/reorder', [\App\Http\Controllers\EtapaObraController::class, 'reorder'])->name('etapa-obras.reorder');
         Route::post('etapa-obras/regenerar', [\App\Http\Controllers\EtapaObraController::class, 'regenerarFromProposta'])->name('etapa-obras.regenerar');
+        Route::resource('etapa-obras', \App\Http\Controllers\EtapaObraController::class)->except(['index']);
         Route::get('diario-reports/{diarioReport}/edit', [\App\Http\Controllers\DiarioReportController::class, 'edit'])->name('diario-reports.edit');
         Route::put('diario-reports/{diarioReport}', [\App\Http\Controllers\DiarioReportController::class, 'update'])->name('diario-reports.update');
         Route::post('diario-reports/{diarioReport}/photos', [\App\Http\Controllers\DiarioReportController::class, 'addPhoto'])->name('diario-reports.add-photo');

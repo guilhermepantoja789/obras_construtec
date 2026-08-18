@@ -181,7 +181,7 @@
             <div class="p-6 border-b-2 border-slate-200">
                 <h3 class="text-[10px] font-black uppercase mb-4 text-amber-600">Condições do Tempo</h3>
                 <div class="grid grid-cols-14 border border-slate-200">
-                    @foreach($diarioReport->clima_horario as $hora => $condicao)
+                    @foreach($diarioReport->clima_horario ?? [] as $hora => $condicao)
                         <div class="p-2 text-center border-r last:border-r-0 border-slate-100">
                             <p class="text-[7px] font-black text-slate-400 leading-none">{{ $hora }}</p>
                             <p class="text-[9px] font-black uppercase {{ $condicao == '-' ? 'text-slate-200' : 'text-slate-900' }}">{{ $condicao }}</p>
@@ -195,7 +195,7 @@
                 <div class="p-6 border-r-2 border-slate-100">
                     <h3 class="text-[10px] font-black text-blue-600 uppercase mb-4">Mão de Obra</h3>
                     <table class="w-full text-xs">
-                        @forelse($diarioReport->mao_de_obra as $item)
+                        @forelse($diarioReport->mao_de_obra ?? [] as $item)
                             <tr class="border-b border-slate-100 last:border-0">
                                 <td class="py-2 font-medium uppercase">{{ $item['funcao'] }}</td>
                                 <td class="py-2 text-right font-black">{{ $item['quantidade'] }}</td>
@@ -208,7 +208,7 @@
                 <div class="p-6">
                     <h3 class="text-[10px] font-black text-purple-600 uppercase mb-4">Equipamentos</h3>
                     <table class="w-full text-xs">
-                        @forelse($diarioReport->maquinario as $item)
+                        @forelse($diarioReport->maquinario ?? [] as $item)
                             <tr class="border-b border-slate-100 last:border-0">
                                 <td class="py-2 font-medium uppercase">{{ $item['item'] }}</td>
                                 <td class="py-2 text-right font-black">{{ $item['quantidade'] }}</td>

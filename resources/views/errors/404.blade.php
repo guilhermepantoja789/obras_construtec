@@ -18,7 +18,7 @@
         <p class="label">Erro 404</p>
         <h1>Página não encontrada</h1>
         <p>O endereço acessado não existe ou foi movido.</p>
-        <a href="/dashboard">Ir para o painel</a>
+        <a href="{{ route('dashboard') }}">Ir para o painel</a>
     </div>
 </body>
 </html>

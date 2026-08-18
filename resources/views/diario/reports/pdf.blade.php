@@ -174,7 +174,7 @@
         <div class="clima-title">⬤ Condições do Tempo (Auditadas por Hora)</div>
         <table class="clima-grid">
             <tr>
-                @foreach($diarioReport->clima_horario as $hora => $condicao)
+                @foreach($diarioReport->clima_horario ?? [] as $hora => $condicao)
                     <td>
                         <span class="clima-hour">{{ $hora }}</span>
                         <span class="clima-val {{ $condicao == '-' ? 'clima-empty' : '' }}">{{ $condicao }}</span>
@@ -190,7 +190,7 @@
             <td class="col col-left">
                 <div class="resource-title blue">Mão de Obra / Equipe</div>
                 <table class="resource-item">
-                    @forelse($diarioReport->mao_de_obra as $item)
+                    @forelse($diarioReport->mao_de_obra ?? [] as $item)
                         <tr>
                             <td class="name">{{ $item['funcao'] }}</td>
                             <td class="qty">{{ $item['quantidade'] }}</td>
@@ -203,7 +203,7 @@
             <td class="col">
                 <div class="resource-title" style="color:#7c3aed">Equipamentos / Maquinário</div>
                 <table class="resource-item">
-                    @forelse($diarioReport->maquinario as $item)
+                    @forelse($diarioReport->maquinario ?? [] as $item)
                         <tr>
                             <td class="name">{{ $item['item'] }}</td>
                             <td class="qty">{{ $item['quantidade'] }}</td>

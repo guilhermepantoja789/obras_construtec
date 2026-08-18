@@ -38,6 +38,34 @@ test('chefe cannot set end date before start date', function () {
     expect(Obra::count())->toBe(0);
 });
 
+test('chefe can open create obra form', function () {
+    $chefe = User::factory()->create(['role' => 'chefe']);
+
+    $this->actingAs($chefe)
+        ->get(route('obras.create'))
+        ->assertOk()
+        ->assertSee('Nova Obra');
+});
+
+test('operador cannot open create obra form', function () {
+    $operador = User::factory()->create(['role' => 'operador']);
+    $obra = Obra::create(['nome' => 'Obra Teste', 'status' => 'em_andamento']);
+    $operador->obras()->attach($obra->id);
+
+    $this->actingAs($operador)
+        ->withSession(['active_obra_id' => $obra->id])
+        ->get(route('obras.create'))
+        ->assertForbidden();
+});
+
+test('show obra with unknown id returns 404', function () {
+    $chefe = User::factory()->create(['role' => 'chefe']);
+
+    $this->actingAs($chefe)
+        ->get(route('obras.show', ['obra' => 999999]))
+        ->assertNotFound();
+});
+
 test('chefe can create obra with both dates and auto prazo', function () {
     $chefe = User::factory()->create(['role' => 'chefe']);
 

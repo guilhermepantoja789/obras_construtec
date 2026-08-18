@@ -5,8 +5,8 @@
                 {{ __('Minhas Obras') }}
             </h2>
             @if(Auth::user()->isChefe())
-            <a href="{{ route('obras.create') }}" class="inline-flex items-center px-4 py-2 bg-amber-500 rounded-xl font-bold text-xs text-slate-900 uppercase tracking-widest hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 transition ease-in-out duration-150 shadow-lg shadow-amber-500/20">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <a href="{{ route('obras.create') }}" class="inline-flex items-center flex-shrink-0 px-3 sm:px-4 py-2 min-h-11 bg-amber-500 rounded-xl font-bold text-[10px] sm:text-xs text-slate-900 uppercase tracking-widest hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 transition ease-in-out duration-150 shadow-lg shadow-amber-500/20">
+                <svg class="w-4 h-4 mr-1.5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
                 Nova Obra
@@ -14,12 +14,6 @@
             @endif
         </div>
     </x-slot>
-
-    @if(session('success'))
-        <div class="mb-6 p-4 bg-green-500/10 border border-green-500/50 rounded-2xl text-green-500 text-sm backdrop-blur-xl">
-            {{ session('success') }}
-        </div>
-    @endif
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @forelse($obras as $obra)
@@ -72,11 +66,11 @@
                                 {{ (isset($activeObra) && $activeObra->id == $obra->id) ? 'Ativa' : 'Selecionar' }}
                             </button>
                         </form>
-                        <a href="{{ route('obras.show', $obra) }}" class="p-2 bg-white/5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-all border border-white/5">
+                        <a href="{{ route('obras.show', $obra) }}" aria-label="Ver obra {{ $obra->nome }}" class="inline-flex items-center justify-center min-h-11 min-w-11 p-2 bg-white/5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-all border border-white/5">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                         </a>
                         @if(Auth::user()->isChefe())
-                        <a href="{{ route('obras.edit', $obra) }}" class="p-2 bg-white/5 hover:bg-amber-500/20 rounded-xl text-slate-400 hover:text-amber-500 transition-all border border-white/5">
+                        <a href="{{ route('obras.edit', $obra) }}" aria-label="Editar obra {{ $obra->nome }}" class="inline-flex items-center justify-center min-h-11 min-w-11 p-2 bg-white/5 hover:bg-amber-500/20 rounded-xl text-slate-400 hover:text-amber-500 transition-all border border-white/5">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                             </svg>
@@ -102,4 +96,10 @@
             </div>
         @endforelse
     </div>
+
+    @if($obras instanceof \Illuminate\Contracts\Pagination\Paginator && $obras->hasPages())
+        <div class="mt-8">
+            {{ $obras->links() }}
+        </div>
+    @endif
 </x-app-layout>

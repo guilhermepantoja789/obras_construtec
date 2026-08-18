@@ -71,12 +71,6 @@
         @open-despesa-modal.window="showDespesaModal = true"
         @open-kpis-modal.window="showKpisModal = true"
     >
-        @if(session('success'))
-            <div class="bg-green-500/10 border border-green-500/20 rounded-2xl px-4 py-3 text-green-400 text-xs font-bold uppercase tracking-widest">
-                {{ session('success') }}
-            </div>
-        @endif
-
         @if(session('error'))
             <div class="bg-rose-500/10 border border-rose-500/20 rounded-2xl px-4 py-3 text-rose-400 text-xs font-bold uppercase tracking-widest">
                 {{ session('error') }}
