@@ -15,6 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: '*');
+
+        $middleware->redirectGuestsTo(fn () => route('login'));
+        $middleware->redirectUsersTo(fn () => route('dashboard'));
+
         $middleware->web(append: [
             \App\Http\Middleware\SetObraContext::class,
         ]);
@@ -51,6 +56,13 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             \Log::error('Database error: ' . $e->getMessage(), ['exception' => $e]);
+
+            // GET/HEAD + redirect()->back() (fallback "/") vira loop quando a sessão/DB está fora.
+            if ($request->isMethodSafe()) {
+                return app()->hasDebugModeEnabled()
+                    ? null
+                    : response()->view('errors.500', [], 500);
+            }
 
             $message = $e->getMessage();
 

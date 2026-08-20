@@ -12,8 +12,8 @@ class PwaManifestController extends Controller
         $startUrl = auth()->check()
             ? route('dashboard', [], absolute: true)
             : route('login', [], absolute: true);
-        $scope = rtrim(url('/'), '/').'/';
-        $id = parse_url($scope, PHP_URL_PATH) ?: '/';
+        $scope = rtrim(url('/app'), '/').'/';
+        $id = parse_url($scope, PHP_URL_PATH) ?: '/app/';
 
         return response()->json([
             'id' => $id,

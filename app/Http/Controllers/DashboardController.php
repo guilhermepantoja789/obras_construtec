@@ -5,11 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Obra;
 use App\Models\DespesaObra;
 use App\Models\DiarioPost;
-use App\Models\EtapaObra;
-use App\Models\User;
 use App\Services\EtapaObraSyncService;
 use App\Support\OrdemHelper;
-use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -18,26 +15,23 @@ class DashboardController extends Controller
     {
         $obraId = session('active_obra_id');
 
-        if (!$obraId) {
-            // Se não houver obra ativa, redireciona para a listagem de obras
+        if (! $obraId) {
             return redirect()->route('obras.index')->with('info', 'Por favor, selecione uma obra para visualizar o painel.');
         }
 
-        $obra = Obra::with(['users', 'etapas', 'propostas'])->findOrFail($obraId);
-
-        // Estatísticas da Obra
+        $obra = Obra::with(['users:id,name', 'etapas', 'propostas'])->findOrFail($obraId);
         $etapas = $obra->etapas;
+
         $stats = [
             'total_posts' => DiarioPost::where('obra_id', $obraId)->count(),
             'today_posts' => DiarioPost::where('obra_id', $obraId)->whereDate('data_postagem', Carbon::today())->count(),
-            'equipe_count' => $obra->users()->count(),
+            'equipe_count' => $obra->users->count(),
             'progresso_geral' => EtapaObraSyncService::calcularProgressoPonderado($etapas),
-            'etapas_concluidas' => $obra->etapas()->where('status', 'concluida')->count(),
-            'total_etapas' => $obra->etapas()->count(),
+            'etapas_concluidas' => $etapas->where('status', 'concluida')->count(),
+            'total_etapas' => $etapas->count(),
         ];
 
-        // Financeiro simplificado
-        $proposta = $obra->propostas->where('status', 'aceita')->first() ?? $obra->propostas->first();
+        $proposta = $obra->propostas->firstWhere('status', 'aceita') ?? $obra->propostas->first();
         $valorRecebido = $proposta ? $proposta->pagamentos()->sum('valor_pago') : 0;
         $valorGasto = DespesaObra::where('obra_id', $obraId)->where('status', 'pago')->sum('valor');
         $financeiro = [
@@ -47,18 +41,16 @@ class DashboardController extends Controller
             'saldo_operacional' => $valorRecebido - $valorGasto,
         ];
         $financeiro['saldo_devedor'] = $financeiro['valor_total'] - $financeiro['valor_pago'];
-        $financeiro['percentual_pago'] = $financeiro['valor_total'] > 0 
-            ? ($financeiro['valor_pago'] / $financeiro['valor_total']) * 100 
+        $financeiro['percentual_pago'] = $financeiro['valor_total'] > 0
+            ? ($financeiro['valor_pago'] / $financeiro['valor_total']) * 100
             : 0;
 
-        // Próximas etapas (não concluídas)
         $proximas_etapas = OrdemHelper::sortCollection(
-            $obra->etapas()->where('status', '!=', 'concluida')->get()
+            $etapas->where('status', '!=', 'concluida')
         )->take(3);
 
-        // Posts recentes
         $recent_posts = DiarioPost::where('obra_id', $obraId)
-            ->with('user')
+            ->with('user:id,name')
             ->latest('data_postagem')
             ->take(5)
             ->get();

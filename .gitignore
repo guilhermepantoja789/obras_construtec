@@ -29,3 +29,5 @@ deploy.zip
 deploy_diario_obras.txt
 backup_*.sql
 *.sql
+/storage-posts/
+/images/

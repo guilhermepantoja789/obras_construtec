@@ -18,7 +18,7 @@
         <p class="label">Erro 500</p>
         <h1>Falha temporária</h1>
         <p>Ocorreu um erro inesperado. Tente novamente em alguns instantes.</p>
-        <a href="/login">Ir para o login</a>
+        <a href="/">Voltar ao site</a>
     </div>
 </body>
 </html>

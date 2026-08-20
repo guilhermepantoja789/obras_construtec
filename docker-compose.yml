@@ -1,0 +1,62 @@
+services:
+  app:
+    build:
+      context: .
+      target: app
+    restart: unless-stopped
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - laravel_storage:/var/www/html/storage
+    healthcheck:
+      test: ["CMD-SHELL", "php -r 'exit(0);'"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+  nginx:
+    build:
+      context: .
+      target: nginx
+    restart: unless-stopped
+    depends_on:
+      - app
+    # Publicado só em loopback (o Tunnel não usa esta porta; origem = http://nginx:80)
+    ports:
+      - "127.0.0.1:${APP_PORT:-18427}:80"
+    volumes:
+      - laravel_storage:/var/www/html/storage:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/up"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  queue:
+    build:
+      context: .
+      target: app
+    restart: unless-stopped
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - laravel_storage:/var/www/html/storage
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    depends_on:
+      - app
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    profiles: ["tunnel"]
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - nginx
+
+volumes:
+  laravel_storage:

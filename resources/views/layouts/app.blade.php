@@ -2,7 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Diário de Obras') }}</title>
@@ -108,7 +108,7 @@
 
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
-                    navigator.serviceWorker.register("{{ asset('sw.js') }}").then(registration => {
+                    navigator.serviceWorker.register("{{ asset('app/sw.js') }}", { scope: "{{ url('/app') }}/" }).then(registration => {
                         console.log('Service Worker registrado com escopo:', registration.scope);
 
                         // Detect update
@@ -773,7 +773,12 @@
     function showToast(msg, color = 'green') {
         const toast = document.createElement('div');
         toast.innerHTML = msg;
-        toast.className = `fixed top-20 right-4 z-[200] p-4 bg-${color}-500/20 border border-${color}-500/50 rounded-2xl text-${color}-400 text-sm backdrop-blur-xl shadow-2xl font-bold transition-all`;
+        const palette = {
+            green: 'bg-green-500/20 border-green-500/50 text-green-400',
+            rose: 'bg-rose-500/20 border-rose-500/50 text-rose-400',
+            amber: 'bg-amber-500/20 border-amber-500/50 text-amber-400',
+        };
+        toast.className = `fixed top-20 right-4 z-[200] p-4 ${palette[color] || palette.green} rounded-2xl text-sm backdrop-blur-xl shadow-2xl font-bold transition-all`;
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 5000);
     }
